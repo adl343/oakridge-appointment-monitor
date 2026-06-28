@@ -1,0 +1,42 @@
+name: Check Oakridge appointments
+
+on:
+  workflow_dispatch:
+    inputs:
+      send_test_message:
+        description: "Send a Telegram test message only"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: "3,8,13,18,23,28,33,38,43,48,53,58 6-8 * * 1-5"
+      timezone: "Europe/London"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    permissions:
+      contents: read
+
+    steps:
+      - name: Get the files
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install the checker
+        run: npm install
+
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Check the website and send Telegram alert
+        run: npm run check
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SEND_TEST_MESSAGE: ${{ inputs.send_test_message }}
