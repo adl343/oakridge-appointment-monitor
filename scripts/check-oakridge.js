@@ -1,54 +1,137 @@
-import { chromium } from "playwright";
+      )}`;
+    })
+  ];
+}
 
-const START_URL =
-  "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032";
-const CATEGORY_LABEL = process.env.CATEGORY_LABEL || "New condition";
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const SEND_TEST_MESSAGE =
-  String(process.env.SEND_TEST_MESSAGE || "").toLowerCase() === "true";
-const SEND_CLOSED_STATUS =
-  String(process.env.SEND_CLOSED_STATUS || "").toLowerCase() === "true";
+function buildSummaryMessage(day) {
+  const averageMs = day.totalChecks
+    ? Math.round(day.totalDurationMs / day.totalChecks)
+    : 0;
 
-async function sendTelegram(message) {
-  if (!BOT_TOKEN || !CHAT_ID) {
-    throw new Error(
-      "Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID in GitHub secrets."
+  return [
+    "Oakridge daily pattern summary",
+    "",
+    `Route: ${CATEGORY_LABEL}`,
+    `Latest status: ${statusLabel(day.lastStatus)}`,
+    `Checks today: ${day.totalChecks}`,
+    `Unavailable checks: ${day.unavailableChecks}`,
+    `Possible available checks: ${day.availableChecks}`,
+    `Website/link errors: ${day.errorChecks}`,
+    `Slow checks: ${day.slowChecks}`,
+    "",
+    `First unavailable: ${day.firstUnavailableAt || "not seen today"}`,
+    `Last unavailable: ${day.lastUnavailableAt || "not seen today"}`,
+    `First possible available: ${day.firstAvailableAt || "not seen today"}`,
+    `Last possible available: ${day.lastAvailableAt || "not seen today"}`,
+    "",
+    ...transitionLines(day),
+    "",
+    `Average check time: ${seconds(averageMs)}`,
+    `Slowest check time: ${seconds(day.slowestMs || 0)}`,
+    `Load health: ${loadHealth(day)}`,
+    `Last page heading: ${day.lastHeading || "none"}`,
+    day.lastError ? `Last error: ${day.lastError}` : "",
+    "",
+    "Meaning: this is only availability tracking. Please complete any medical request yourself.",
+    `Open manually: ${START_URL}`,
+    githubRunUrl() ? `GitHub run: ${githubRunUrl()}` : ""
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildAvailableAlert(result, previousStatus) {
+  const firstSeenText = previousStatus === "available" ? "Still possible open" : "New possible opening";
+
+  return [
+    `Oakridge alert: ${CATEGORY_LABEL} may be open now.`,
+    "",
+    `Type: ${firstSeenText}`,
+    "Status: the usual unavailable message was not found.",
+    `Checked: ${result.checkedAtLocal}`,
+    `Page heading: ${result.heading || "none"}`,
+    `Check time: ${seconds(result.durationMs)}`,
+    "",
+    "Open this link and complete the request yourself:",
+    START_URL,
+    "",
+    "Do not ignore urgent symptoms. If it is urgent, use 111/999 as appropriate.",
+    githubRunUrl() ? `GitHub run: ${githubRunUrl()}` : ""
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function checkWebsite() {
+  const startedAt = Date.now();
+  const now = londonTime();
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+
+  try {
+    await page.goto(START_URL, {
+      waitUntil: "domcontentloaded",
+      timeout: 30000
+    });
+
+    const categoryLink = page
+      .locator("a")
+      .filter({ hasText: CATEGORY_LABEL })
+      .first();
+
+    await categoryLink.waitFor({ state: "visible", timeout: 15000 });
+
+    await Promise.all([
+      page.waitForURL(/OnConCategory=/, { timeout: 15000 }).catch(() => null),
+      categoryLink.click()
+    ]);
+
+    await page.waitForLoadState("domcontentloaded", { timeout: 15000 }).catch(
+      () => null
     );
-  }
 
-  const response = await fetch(
-    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: message,
-        disable_web_page_preview: true
-      })
-    }
-  );
-
-  const result = await response.json();
-  if (!result.ok) {
-    throw new Error(
-      `Telegram did not accept the message: ${result.description || "unknown error"}`
+    const pageText = cleanText(
+      await page
+        .locator("main")
+        .innerText({ timeout: 15000 })
+        .catch(() => page.locator("body").innerText({ timeout: 15000 }))
     );
+    const heading = cleanText(
+      await page
+        .locator("h1")
+        .first()
+        .innerText({ timeout: 5000 })
+        .catch(() => "No heading found")
+    );
+
+    return {
+      status: looksUnavailable(pageText) ? "unavailable" : "available",
+      checkedAtIso: new Date().toISOString(),
+      checkedAtLocal: now.display,
+      dateKey: now.dateKey,
+      time: now.time,
+      durationMs: Date.now() - startedAt,
+      heading,
+      error: ""
+    };
+  } finally {
+    await browser.close();
   }
 }
 
-function cleanText(value) {
-  return value.replace(/\s+/g, " ").trim();
-}
+function errorResult(error, startedAt) {
+  const now = londonTime();
 
-function looksUnavailable(text) {
-  const lower = text.toLowerCase();
-  return (
-    lower.includes("currently unavailable") ||
-    lower.includes("not accepting online") ||
-    lower.includes("we are not accepting")
-  );
+  return {
+    status: "error",
+    checkedAtIso: new Date().toISOString(),
+    checkedAtLocal: now.display,
+    dateKey: now.dateKey,
+    time: now.time,
+    durationMs: Date.now() - startedAt,
+    heading: "",
+    error: cleanText(error.message).slice(0, 500)
+  };
 }
 
 if (SEND_TEST_MESSAGE) {
@@ -59,69 +142,41 @@ if (SEND_TEST_MESSAGE) {
   process.exit(0);
 }
 
-const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage();
+const runStartedAt = Date.now();
+let result;
 
 try {
-  await page.goto(START_URL, {
-    waitUntil: "domcontentloaded",
-    timeout: 30000
-  });
+  result = await checkWebsite();
+} catch (error) {
+  result = errorResult(error, runStartedAt);
+}
 
-  const categoryLink = page
-    .locator("a")
-    .filter({ hasText: CATEGORY_LABEL })
-    .first();
+const state = await readState();
+const { day, previousStatus } = recordCheck(state, result);
+await writeState(state);
 
-  await categoryLink.waitFor({ state: "visible", timeout: 15000 });
+if (SEND_STATUS_MESSAGE || SEND_CLOSED_STATUS) {
+  await sendTelegram(buildSummaryMessage(day));
+  console.log("Sent Telegram pattern summary.");
+  process.exit(0);
+}
 
-  await Promise.all([
-    page.waitForURL(/OnConCategory=/, { timeout: 15000 }).catch(() => null),
-    categoryLink.click()
-  ]);
-
-  await page.waitForLoadState("domcontentloaded", { timeout: 15000 }).catch(
-    () => null
-  );
-
-  const pageText = cleanText(
-    await page
-      .locator("main")
-      .innerText({ timeout: 15000 })
-      .catch(() => page.locator("body").innerText({ timeout: 15000 }))
-  );
-
-  const checkedAt = new Date().toLocaleString("en-GB", {
-    timeZone: "Europe/London",
-    dateStyle: "medium",
-    timeStyle: "short"
-  });
-
-  if (looksUnavailable(pageText)) {
-    console.log(`[${checkedAt}] ${CATEGORY_LABEL} is still unavailable.`);
-
-    if (SEND_CLOSED_STATUS) {
-      await sendTelegram(
-        `Oakridge checked at ${checkedAt}: ${CATEGORY_LABEL} is still unavailable.`
-      );
-    }
-
-    process.exit(0);
+if (result.status === "available") {
+  if (previousStatus !== "available") {
+    await sendTelegram(buildAvailableAlert(result, previousStatus));
+    console.log("Possible opening detected. Telegram alert sent.");
+  } else {
+    console.log("Possible opening still visible. Alert already sent earlier.");
   }
 
-  await sendTelegram(
-    [
-      `Oakridge alert: ${CATEGORY_LABEL} may be open now.`,
-      "",
-      `Checked: ${checkedAt}`,
-      `Open this link and complete the request yourself:`,
-      START_URL,
-      "",
-      "Do not ignore urgent symptoms. If it is urgent, use 111/999 as appropriate."
-    ].join("\n")
-  );
-
-  console.log(`[${checkedAt}] Possible opening detected. Telegram alert sent.`);
-} finally {
-  await browser.close();
+  process.exit(0);
 }
+
+if (result.status === "error") {
+  console.log(`Website check had an error: ${result.error}`);
+  process.exit(0);
+}
+
+console.log(
+  `[${result.checkedAtLocal}] ${CATEGORY_LABEL} is still unavailable.`
+);
