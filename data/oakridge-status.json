@@ -113,24 +113,33 @@
     },
     "2026-07-01": {
       "date": "2026-07-01",
-      "totalChecks": 1,
+      "totalChecks": 2,
       "availableChecks": 1,
-      "unavailableChecks": 0,
+      "unavailableChecks": 1,
       "errorChecks": 0,
       "slowChecks": 0,
-      "totalDurationMs": 19631,
+      "totalDurationMs": 21368,
       "slowestMs": 19631,
       "firstCheckAt": "1 Jul 2026, 09:53",
-      "lastCheckAt": "1 Jul 2026, 09:53",
+      "lastCheckAt": "1 Jul 2026, 12:32",
       "firstAvailableAt": "1 Jul 2026, 09:53",
       "lastAvailableAt": "1 Jul 2026, 09:53",
-      "firstUnavailableAt": "",
-      "lastUnavailableAt": "",
-      "lastStatus": "available",
-      "lastHeading": "New condition",
+      "firstUnavailableAt": "1 Jul 2026, 12:32",
+      "lastUnavailableAt": "1 Jul 2026, 12:32",
+      "lastStatus": "unavailable",
+      "lastHeading": "New condition is currently unavailable.",
       "lastError": "",
-      "lastDurationMs": 19631,
-      "transitions": [],
+      "lastDurationMs": 1737,
+      "transitions": [
+        {
+          "at": "1 Jul 2026, 12:32",
+          "time": "12:32",
+          "from": "available",
+          "to": "unavailable",
+          "heading": "New condition is currently unavailable.",
+          "error": ""
+        }
+      ],
       "checks": [
         {
           "at": "1 Jul 2026, 09:53",
@@ -139,9 +148,17 @@
           "durationMs": 19631,
           "heading": "New condition",
           "error": ""
+        },
+        {
+          "at": "1 Jul 2026, 12:32",
+          "time": "12:32",
+          "status": "unavailable",
+          "durationMs": 1737,
+          "heading": "New condition is currently unavailable.",
+          "error": ""
         }
       ]
     }
   },
-  "lastUpdatedAt": "2026-07-01T08:53:58.998Z"
+  "lastUpdatedAt": "2026-07-01T11:32:09.223Z"
 }
