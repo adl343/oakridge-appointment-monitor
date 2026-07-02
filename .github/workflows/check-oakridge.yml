@@ -13,25 +13,31 @@ on:
         required: false
         default: false
         type: boolean
+
   schedule:
     # GitHub cron uses UTC. In British Summer Time, this is 6:03am-8:58am UK time.
     - cron: "3,8,13,18,23,28,33,38,43,48,53,58 5-7 * * 1-5"
+
     # Daily peace-of-mind summary at 9:05am UK time during British Summer Time.
     - cron: "5 8 * * 1-5"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: oakridge-appointment-monitor
+  cancel-in-progress: false
 
 jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 7
-    permissions:
-      contents: write
-    concurrency:
-      group: oakridge-appointment-monitor
-      cancel-in-progress: false
 
     steps:
       - name: Get the files
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -57,10 +63,16 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git pull --rebase --autostash origin main
+
           git add data/oakridge-status.json
+
           if git diff --cached --quiet; then
             echo "No tracking data changes to save."
-          else
-            git commit -m "Update Oakridge appointment tracking data [skip ci]"
-            git push
+            exit 0
           fi
+
+          git commit -m "Update Oakridge appointment tracking data [skip ci]"
+
+          git push origin HEAD:main
