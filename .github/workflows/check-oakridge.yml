@@ -15,11 +15,11 @@ on:
         type: boolean
 
   schedule:
-    # GitHub cron uses UTC. In British Summer Time, this is 6:03am-8:58am UK time.
-    - cron: "3,8,13,18,23,28,33,38,43,48,53,58 5-7 * * 1-5"
+    # Every 5 minutes, Monday to Friday, 6:00am to 10:55am UK time during British Summer Time.
+    - cron: "*/5 5-9 * * 1-5"
 
-    # Daily peace-of-mind summary at 9:05am UK time during British Summer Time.
-    - cron: "5 8 * * 1-5"
+    # One final check at 11:00am UK time during British Summer Time.
+    - cron: "0 10 * * 1-5"
 
 permissions:
   contents: write
@@ -35,14 +35,15 @@ jobs:
 
     steps:
       - name: Get the files
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "22"
+          package-manager-cache: false
 
       - name: Install the checker
         run: npm install
@@ -56,7 +57,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SEND_TEST_MESSAGE: ${{ github.event.inputs.send_test_message || 'false' }}
-          SEND_STATUS_MESSAGE: ${{ github.event.schedule == '5 8 * * 1-5' || github.event.inputs.send_status_message == 'true' }}
+          SEND_STATUS_MESSAGE: ${{ github.event.inputs.send_status_message == 'true' }}
 
       - name: Save pattern tracking data
         if: ${{ success() && github.event.inputs.send_test_message != 'true' }}
@@ -74,5 +75,4 @@ jobs:
           fi
 
           git commit -m "Update Oakridge appointment tracking data [skip ci]"
-
           git push origin HEAD:main
