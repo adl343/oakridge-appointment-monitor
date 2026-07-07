@@ -524,35 +524,56 @@
     },
     "2026-07-07": {
       "date": "2026-07-07",
-      "totalChecks": 3,
+      "totalChecks": 15,
       "availableChecks": 3,
-      "unavailableChecks": 0,
-      "errorChecks": 0,
-      "slowChecks": 0,
-      "totalDurationMs": 5326,
-      "slowestMs": 2367,
+      "unavailableChecks": 11,
+      "errorChecks": 1,
+      "slowChecks": 1,
+      "totalDurationMs": 43455,
+      "slowestMs": 20044,
       "firstCheckAt": "7 Jul 2026, 09:19",
-      "lastCheckAt": "7 Jul 2026, 09:40",
+      "lastCheckAt": "7 Jul 2026, 13:48",
       "firstAvailableAt": "7 Jul 2026, 09:19",
       "lastAvailableAt": "7 Jul 2026, 09:40",
-      "firstUnavailableAt": "",
-      "lastUnavailableAt": "",
-      "lastStatus": "available",
-      "lastStatusChangedAt": "7 Jul 2026, 09:19",
-      "lastHeading": "New condition",
+      "firstUnavailableAt": "7 Jul 2026, 12:57",
+      "lastUnavailableAt": "7 Jul 2026, 13:48",
+      "lastStatus": "unavailable",
+      "lastStatusChangedAt": "7 Jul 2026, 12:57",
+      "lastHeading": "New condition is currently unavailable.",
       "lastError": "",
-      "lastDurationMs": 1579,
-      "lastCheckedUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultationSelectQuestionnaire",
+      "lastDurationMs": 1590,
+      "lastCheckedUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
       "availableAlertsSent": 2,
       "lastAvailableAlertAt": "7 Jul 2026, 09:37",
       "lastAvailableAlertAtIso": "2026-07-07T08:37:14.641Z",
-      "errorAlertsSent": 0,
-      "lastErrorAlertAt": "",
-      "lastErrorAlertAtIso": "",
+      "errorAlertsSent": 1,
+      "lastErrorAlertAt": "7 Jul 2026, 12:52",
+      "lastErrorAlertAtIso": "2026-07-07T11:52:40.900Z",
       "healthMessagesSent": 2,
       "lastHealthMessageAt": "7 Jul 2026, 09:40",
       "lastHealthMessageAtIso": "2026-07-07T08:40:30.378Z",
-      "transitions": [],
+      "transitions": [
+        {
+          "at": "7 Jul 2026, 12:52",
+          "iso": "2026-07-07T11:52:40.900Z",
+          "time": "12:52",
+          "from": "available",
+          "to": "error",
+          "heading": "",
+          "classification": "runtime-error",
+          "error": "The operation was aborted due to timeout"
+        },
+        {
+          "at": "7 Jul 2026, 12:57",
+          "iso": "2026-07-07T11:57:43.276Z",
+          "time": "12:57",
+          "from": "error",
+          "to": "unavailable",
+          "heading": "New condition is currently unavailable.",
+          "classification": "closed-message-detected",
+          "error": ""
+        }
+      ],
       "alerts": [
         {
           "type": "available",
@@ -588,6 +609,15 @@
           "classification": "questionnaire-open",
           "heading": "New condition",
           "error": ""
+        },
+        {
+          "type": "error",
+          "at": "7 Jul 2026, 12:52",
+          "iso": "2026-07-07T11:52:40.900Z",
+          "status": "error",
+          "classification": "runtime-error",
+          "heading": "",
+          "error": "The operation was aborted due to timeout"
         }
       ],
       "checks": [
@@ -708,11 +738,470 @@
               ]
             }
           ]
+        },
+        {
+          "at": "7 Jul 2026, 12:52",
+          "iso": "2026-07-07T11:52:40.900Z",
+          "time": "12:52",
+          "status": "error",
+          "classification": "runtime-error",
+          "durationMs": 20044,
+          "heading": "",
+          "title": "",
+          "snippet": "",
+          "error": "The operation was aborted due to timeout",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+          "trace": []
+        },
+        {
+          "at": "7 Jul 2026, 12:57",
+          "iso": "2026-07-07T11:57:43.276Z",
+          "time": "12:57",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1607,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            }
+          ]
+        },
+        {
+          "at": "7 Jul 2026, 13:02",
+          "iso": "2026-07-07T12:02:45.147Z",
+          "time": "13:02",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1668,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            }
+          ]
+        },
+        {
+          "at": "7 Jul 2026, 13:07",
+          "iso": "2026-07-07T12:07:46.947Z",
+          "time": "13:07",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1599,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            }
+          ]
+        },
+        {
+          "at": "7 Jul 2026, 13:12",
+          "iso": "2026-07-07T12:12:48.874Z",
+          "time": "13:12",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1736,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            }
+          ]
+        },
+        {
+          "at": "7 Jul 2026, 13:17",
+          "iso": "2026-07-07T12:17:50.680Z",
+          "time": "13:17",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1612,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            }
+          ]
+        },
+        {
+          "at": "7 Jul 2026, 13:22",
+          "iso": "2026-07-07T12:22:52.513Z",
+          "time": "13:22",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1637,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            }
+          ]
+        },
+        {
+          "at": "7 Jul 2026, 13:27",
+          "iso": "2026-07-07T12:27:54.303Z",
+          "time": "13:27",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1602,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "OrgIdForError"
+              ]
+            }
+          ]
+        },
+        {
+          "at": "7 Jul 2026, 13:32",
+          "iso": "2026-07-07T12:32:56.279Z",
+          "time": "13:32",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1783,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            }
+          ]
+        },
+        {
+          "at": "7 Jul 2026, 13:37",
+          "iso": "2026-07-07T12:37:58.112Z",
+          "time": "13:37",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1644,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "OrgIdForError"
+              ]
+            }
+          ]
+        },
+        {
+          "at": "7 Jul 2026, 13:42",
+          "iso": "2026-07-07T12:42:59.914Z",
+          "time": "13:42",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1607,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            }
+          ]
+        },
+        {
+          "at": "7 Jul 2026, 13:48",
+          "iso": "2026-07-07T12:48:01.694Z",
+          "time": "13:48",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1590,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "OrgIdForError"
+              ]
+            }
+          ]
         }
       ],
-      "lastPageTitle": "Select Questionnaire",
-      "lastSnippet": "Select Questionnaire Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition Please fill this in if you require help with a new health problem. ADHD (adult) ADHD (child) Allergies Autism (adult) Autism (child) Breast probl",
-      "lastClassification": "questionnaire-open",
+      "lastPageTitle": "Service Unavailable",
+      "lastSnippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+      "lastClassification": "closed-message-detected",
       "lastTrace": [
         {
           "step": 1,
@@ -723,7 +1212,6 @@
           "cookieNames": [
             "JSESSIONID",
             "onConFromNhsApp",
-            "UID",
             "OrgIdForError"
           ]
         },
@@ -731,30 +1219,16 @@
           "step": 2,
           "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
           "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
-          "status": 302,
-          "location": "https://systmonline.tpp-uk.com/2/OnlineConsultationSelectQuestionnaire",
-          "cookieNames": [
-            "JSESSIONID",
-            "onConFromNhsApp",
-            "UID",
-            "OrgIdForError"
-          ]
-        },
-        {
-          "step": 3,
-          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultationSelectQuestionnaire",
-          "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultationSelectQuestionnaire",
           "status": 200,
           "location": "",
           "cookieNames": [
             "JSESSIONID",
             "onConFromNhsApp",
-            "UID",
             "OrgIdForError"
           ]
         }
       ]
     }
   },
-  "lastUpdatedAt": "2026-07-07T08:40:30.378Z"
+  "lastUpdatedAt": "2026-07-07T12:48:01.694Z"
 }
