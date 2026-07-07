@@ -524,24 +524,24 @@
     },
     "2026-07-07": {
       "date": "2026-07-07",
-      "totalChecks": 39,
+      "totalChecks": 40,
       "availableChecks": 3,
-      "unavailableChecks": 35,
+      "unavailableChecks": 36,
       "errorChecks": 1,
       "slowChecks": 1,
-      "totalDurationMs": 76280,
+      "totalDurationMs": 78004,
       "slowestMs": 20044,
       "firstCheckAt": "7 Jul 2026, 09:19",
-      "lastCheckAt": "7 Jul 2026, 19:10",
+      "lastCheckAt": "7 Jul 2026, 21:01",
       "firstAvailableAt": "7 Jul 2026, 09:19",
       "lastAvailableAt": "7 Jul 2026, 09:40",
       "firstUnavailableAt": "7 Jul 2026, 12:57",
-      "lastUnavailableAt": "7 Jul 2026, 19:10",
+      "lastUnavailableAt": "7 Jul 2026, 21:01",
       "lastStatus": "unavailable",
       "lastStatusChangedAt": "7 Jul 2026, 12:57",
       "lastHeading": "New condition is currently unavailable.",
       "lastError": "",
-      "lastDurationMs": 1014,
+      "lastDurationMs": 1724,
       "lastCheckedUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
       "availableAlertsSent": 2,
       "lastAvailableAlertAt": "7 Jul 2026, 09:37",
@@ -549,9 +549,9 @@
       "errorAlertsSent": 1,
       "lastErrorAlertAt": "7 Jul 2026, 12:52",
       "lastErrorAlertAtIso": "2026-07-07T11:52:40.900Z",
-      "healthMessagesSent": 2,
-      "lastHealthMessageAt": "7 Jul 2026, 09:40",
-      "lastHealthMessageAtIso": "2026-07-07T08:40:30.378Z",
+      "healthMessagesSent": 3,
+      "lastHealthMessageAt": "7 Jul 2026, 21:01",
+      "lastHealthMessageAtIso": "2026-07-07T20:01:58.223Z",
       "transitions": [
         {
           "at": "7 Jul 2026, 12:52",
@@ -618,6 +618,15 @@
           "classification": "runtime-error",
           "heading": "",
           "error": "The operation was aborted due to timeout"
+        },
+        {
+          "type": "health",
+          "at": "7 Jul 2026, 21:01",
+          "iso": "2026-07-07T20:01:58.223Z",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "heading": "New condition is currently unavailable.",
+          "error": ""
         }
       ],
       "checks": [
@@ -2173,6 +2182,47 @@
               ]
             }
           ]
+        },
+        {
+          "at": "7 Jul 2026, 21:01",
+          "iso": "2026-07-07T20:01:58.223Z",
+          "time": "21:01",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1724,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            }
+          ]
         }
       ],
       "lastPageTitle": "Service Unavailable",
@@ -2188,6 +2238,7 @@
           "cookieNames": [
             "JSESSIONID",
             "onConFromNhsApp",
+            "UID",
             "OrgIdForError"
           ]
         },
@@ -2200,11 +2251,12 @@
           "cookieNames": [
             "JSESSIONID",
             "onConFromNhsApp",
+            "UID",
             "OrgIdForError"
           ]
         }
       ]
     }
   },
-  "lastUpdatedAt": "2026-07-07T18:10:46.902Z"
+  "lastUpdatedAt": "2026-07-07T20:01:58.223Z"
 }
