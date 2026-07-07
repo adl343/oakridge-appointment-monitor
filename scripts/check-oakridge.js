@@ -10,9 +10,15 @@ const CATEGORY_URL = process.env.CATEGORY_URL || "";
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const STATE_PATH = process.env.STATE_PATH || "data/oakridge-status.json";
+const LOG_PATH = process.env.LOG_PATH || "data/oakridge-check-log.jsonl";
+const PATTERN_PATH = process.env.PATTERN_PATH || "data/oakridge-pattern.json";
 const MAX_DAYS_TO_KEEP = numberEnv("MAX_DAYS_TO_KEEP", 30);
 const MAX_CHECKS_PER_DAY = numberEnv("MAX_CHECKS_PER_DAY", 200);
+const MAX_LOG_LINES = numberEnv("MAX_LOG_LINES", 1500);
 const SLOW_THRESHOLD_MS = numberEnv("SLOW_THRESHOLD_MS", 10000);
+const HTTP_TIMEOUT_MS = numberEnv("HTTP_TIMEOUT_MS", 20000);
+const MAX_REDIRECTS = numberEnv("MAX_REDIRECTS", 5);
+const PAGE_TEXT_SNIPPET_LENGTH = numberEnv("PAGE_TEXT_SNIPPET_LENGTH", 280);
 const AVAILABLE_ALERT_COOLDOWN_MINUTES = numberEnv(
   "AVAILABLE_ALERT_COOLDOWN_MINUTES",
   5
@@ -27,7 +33,7 @@ const ALERT_EVERY_AVAILABLE = flagEnv("ALERT_EVERY_AVAILABLE", true);
 const DRY_RUN_TELEGRAM = flagEnv("DRY_RUN_TELEGRAM");
 const MOCK_STATUS = process.env.MOCK_STATUS || "";
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; OakridgeAppointmentChecker/1.0; +https://github.com/adl343/oakridge-appointment-monitor)";
+  "Mozilla/5.0 (compatible; OakridgeAppointmentChecker/1.1; +https://github.com/adl343/oakridge-appointment-monitor)";
 
 function flagEnv(name, defaultValue = false) {
   const value = process.env[name];
@@ -93,6 +99,10 @@ function htmlToText(html) {
   );
 }
 
+function pageSnippet(text) {
+  return cleanText(text).slice(0, PAGE_TEXT_SNIPPET_LENGTH);
+}
+
 function getSetCookies(headers) {
   if (typeof headers.getSetCookie === "function") {
     return headers.getSetCookie();
@@ -101,16 +111,38 @@ function getSetCookies(headers) {
   return value ? value.split(/,(?=[^;,]+=)/) : [];
 }
 
-function cookieHeaderFrom(response) {
-  return getSetCookies(response.headers)
-    .map((value) => value.split(";")[0])
-    .filter(Boolean)
+function createCookieJar() {
+  return new Map();
+}
+
+function updateCookieJar(jar, headers) {
+  for (const value of getSetCookies(headers)) {
+    const cookie = value.split(";")[0];
+    const separator = cookie.indexOf("=");
+    if (separator > 0) {
+      jar.set(cookie.slice(0, separator), cookie.slice(separator + 1));
+    }
+  }
+}
+
+function cookieHeaderFromJar(jar) {
+  return Array.from(jar.entries())
+    .map(([name, value]) => `${name}=${value}`)
     .join("; ");
+}
+
+function cookieNamesFromJar(jar) {
+  return Array.from(jar.keys());
 }
 
 function extractHeading(html) {
   const match = String(html || "").match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
   return match ? htmlToText(match[1]) : "No heading found";
+}
+
+function extractTitle(html) {
+  const match = String(html || "").match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
+  return match ? htmlToText(match[1]) : "";
 }
 
 function extractCategoryUrl(html, baseUrl) {
@@ -146,10 +178,44 @@ function looksUnavailable(text) {
   );
 }
 
-function looksLikeProblemPage(text, heading) {
+function looksLikeProblemPage(text, heading, title = "") {
   const lowerText = text.toLowerCase();
   const lowerHeading = String(heading || "").toLowerCase();
-  return lowerHeading === "there is a problem" || lowerText.includes("there is a problem");
+  const lowerTitle = String(title || "").toLowerCase();
+  return (
+    lowerHeading === "there is a problem" ||
+    lowerTitle.includes("there is a problem") ||
+    lowerText.includes("there is a problem")
+  );
+}
+
+function looksLikeInvalidSessionPage(text, heading, title = "") {
+  const lowerText = text.toLowerCase();
+  const lowerHeading = String(heading || "").toLowerCase();
+  const lowerTitle = String(title || "").toLowerCase();
+  return (
+    lowerHeading.includes("invalid session") ||
+    lowerTitle.includes("invalid session") ||
+    lowerText.includes("invalid session") ||
+    lowerText.includes("session has expired")
+  );
+}
+
+function looksLikeOpenQuestionnairePage(url, heading, text, title = "") {
+  const lowerUrl = String(url || "").toLowerCase();
+  const lowerHeading = String(heading || "").toLowerCase();
+  const lowerText = text.toLowerCase();
+  const lowerTitle = String(title || "").toLowerCase();
+  return (
+    lowerUrl.includes("onlineconsultationselectquestionnaire") &&
+    (lowerHeading === CATEGORY_LABEL.toLowerCase() ||
+      lowerTitle.includes("select questionnaire")) &&
+    lowerText.includes("please fill this in if you require help with a new health problem")
+  );
+}
+
+function createCheckError(message, details = {}) {
+  return Object.assign(new Error(message), details);
 }
 
 function londonTime(date = new Date()) {
@@ -182,7 +248,7 @@ async function readState() {
     return JSON.parse(await readFile(STATE_PATH, "utf8"));
   } catch (error) {
     if (error.code === "ENOENT") {
-      return { version: 2, categoryLabel: CATEGORY_LABEL, days: {} };
+      return { version: 3, categoryLabel: CATEGORY_LABEL, days: {} };
     }
     throw error;
   }
@@ -191,6 +257,185 @@ async function readState() {
 async function writeState(state) {
   await mkdir(dirname(STATE_PATH), { recursive: true });
   await writeFile(STATE_PATH, `${JSON.stringify(state, null, 2)}\n`);
+}
+
+function weekdayName(dateKey) {
+  const [year, month, day] = String(dateKey || "")
+    .split("-")
+    .map(Number);
+  if (!year || !month || !day) {
+    return "Unknown";
+  }
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-GB", {
+    timeZone: "Europe/London",
+    weekday: "long"
+  });
+}
+
+function timeToMinutes(value) {
+  const match = String(value || "").match(/^(\d{2}):(\d{2})$/);
+  if (!match) {
+    return null;
+  }
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function minutesToTime(value) {
+  if (!Number.isFinite(value)) {
+    return "";
+  }
+  const hours = Math.floor(value / 60)
+    .toString()
+    .padStart(2, "0");
+  const minutes = Math.round(value % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+function average(values) {
+  if (!values.length) {
+    return null;
+  }
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function buildPattern(state) {
+  const days = Object.values(state.days || {})
+    .map((day) => ensureDayShape(day))
+    .sort((left, right) => left.date.localeCompare(right.date));
+  const weekdays = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+  ];
+
+  const recentOpenings = days
+    .map((day) => {
+      const openChecks = day.checks.filter((check) => check.status === "available");
+      if (!openChecks.length) {
+        return null;
+      }
+      return {
+        date: day.date,
+        weekday: weekdayName(day.date),
+        firstOpen: openChecks[0].time || "",
+        lastOpen: openChecks[openChecks.length - 1].time || "",
+        openChecks: openChecks.length,
+        lastStatus: day.lastStatus || "",
+        lastHeading: day.lastHeading || ""
+      };
+    })
+    .filter(Boolean)
+    .slice(-14)
+    .reverse();
+
+  const byWeekday = weekdays.map((weekday) => {
+    const weekdayDays = days.filter((day) => weekdayName(day.date) === weekday);
+    const openingDays = weekdayDays
+      .map((day) => {
+        const openChecks = day.checks.filter((check) => check.status === "available");
+        if (!openChecks.length) {
+          return null;
+        }
+        return {
+          firstOpen: openChecks[0].time || "",
+          lastOpen: openChecks[openChecks.length - 1].time || "",
+          openChecks: openChecks.length
+        };
+      })
+      .filter(Boolean);
+
+    const firstOpenMinutes = openingDays
+      .map((day) => timeToMinutes(day.firstOpen))
+      .filter(Number.isFinite);
+    const lastOpenMinutes = openingDays
+      .map((day) => timeToMinutes(day.lastOpen))
+      .filter(Number.isFinite);
+    const hourCounts = new Map();
+
+    for (const day of openingDays) {
+      const hour = String(day.firstOpen || "").slice(0, 2);
+      if (hour) {
+        hourCounts.set(hour, (hourCounts.get(hour) || 0) + 1);
+      }
+    }
+
+    const commonHours = Array.from(hourCounts.entries())
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+      .slice(0, 3)
+      .map(([hour, count]) => ({
+        hour: `${hour}:00`,
+        seen: count
+      }));
+
+    return {
+      weekday,
+      daysSeen: weekdayDays.length,
+      daysOpen: openingDays.length,
+      openRate: weekdayDays.length
+        ? Number((openingDays.length / weekdayDays.length).toFixed(2))
+        : 0,
+      openChecks: openingDays.reduce((sum, day) => sum + day.openChecks, 0),
+      typicalFirstOpen: minutesToTime(average(firstOpenMinutes)),
+      typicalLastOpen: minutesToTime(average(lastOpenMinutes)),
+      commonOpeningHours: commonHours
+    };
+  });
+
+  const summaryLines = recentOpenings.length
+    ? recentOpenings.map(
+        (opening) =>
+          `${opening.weekday} ${opening.date}: ${opening.firstOpen}${
+            opening.lastOpen && opening.lastOpen !== opening.firstOpen
+              ? `-${opening.lastOpen}`
+              : ""
+          } (${opening.openChecks} open checks)`
+      )
+    : ["No openings recorded yet."];
+
+  return {
+    generatedAt: new Date().toISOString(),
+    windowDays: days.length,
+    openDays: recentOpenings.length,
+    recentOpenings,
+    byWeekday,
+    summaryLines
+  };
+}
+
+async function writePattern(state) {
+  await mkdir(dirname(PATTERN_PATH), { recursive: true });
+  await writeFile(PATTERN_PATH, `${JSON.stringify(buildPattern(state), null, 2)}\n`);
+}
+
+async function writeStateArtifacts(state) {
+  await writeState(state);
+  await writePattern(state);
+}
+
+async function appendLogEntry(entry) {
+  let lines = [];
+  try {
+    lines = (await readFile(LOG_PATH, "utf8"))
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  lines.push(JSON.stringify(entry));
+  lines = lines.slice(-MAX_LOG_LINES);
+
+  await mkdir(dirname(LOG_PATH), { recursive: true });
+  await writeFile(LOG_PATH, `${lines.join("\n")}\n`);
 }
 
 function emptyDay(dateKey) {
@@ -212,9 +457,13 @@ function emptyDay(dateKey) {
     lastStatus: "",
     lastStatusChangedAt: "",
     lastHeading: "",
+    lastPageTitle: "",
+    lastSnippet: "",
+    lastClassification: "",
     lastError: "",
     lastDurationMs: 0,
     lastCheckedUrl: "",
+    lastTrace: [],
     availableAlertsSent: 0,
     lastAvailableAlertAt: "",
     lastAvailableAlertAtIso: "",
@@ -249,7 +498,7 @@ function pruneOldDays(state) {
 }
 
 function recordCheck(state, result) {
-  state.version = 2;
+  state.version = 3;
   state.categoryLabel = CATEGORY_LABEL;
   state.lastUpdatedAt = result.checkedAtIso;
   state.days ||= {};
@@ -266,8 +515,12 @@ function recordCheck(state, result) {
   day.firstCheckAt ||= result.checkedAtLocal;
   day.lastCheckAt = result.checkedAtLocal;
   day.lastHeading = result.heading || "";
+  day.lastPageTitle = result.pageTitle || "";
+  day.lastSnippet = result.pageTextSnippet || "";
+  day.lastClassification = result.classification || "";
   day.lastError = result.error || "";
   day.lastCheckedUrl = result.checkedUrl || "";
+  day.lastTrace = Array.isArray(result.trace) ? result.trace : [];
 
   if (result.durationMs >= SLOW_THRESHOLD_MS) {
     day.slowChecks += 1;
@@ -294,6 +547,7 @@ function recordCheck(state, result) {
       from: previousStatus,
       to: result.status,
       heading: result.heading || "",
+      classification: result.classification || "",
       error: result.error || ""
     });
   } else if (!previousStatus) {
@@ -306,10 +560,14 @@ function recordCheck(state, result) {
     iso: result.checkedAtIso,
     time: result.time,
     status: result.status,
+    classification: result.classification || "",
     durationMs: result.durationMs,
     heading: result.heading || "",
+    title: result.pageTitle || "",
+    snippet: result.pageTextSnippet || "",
     error: result.error || "",
-    url: result.checkedUrl || ""
+    url: result.checkedUrl || "",
+    trace: Array.isArray(result.trace) ? result.trace : []
   });
   day.checks = day.checks.slice(-MAX_CHECKS_PER_DAY);
   pruneOldDays(state);
@@ -323,6 +581,7 @@ function recordAlert(day, type, result) {
     at: result.checkedAtLocal,
     iso: result.checkedAtIso,
     status: result.status,
+    classification: result.classification || "",
     heading: result.heading || "",
     error: result.error || ""
   });
@@ -345,7 +604,7 @@ function recordAlert(day, type, result) {
 
 function statusLabel(status) {
   if (status === "available") {
-    return "possibly open";
+    return "open";
   }
   if (status === "unavailable") {
     return "closed";
@@ -408,13 +667,12 @@ function shouldSendErrorAlert(day, result, previousStatus) {
 
 function buildSummaryMessage(day) {
   return [
-    "Oakridge health",
+    "Oakridge update",
     `${CATEGORY_LABEL}: ${statusLabel(day.lastStatus)}`,
-    `Today: ${day.totalChecks} checks, ${day.availableChecks} open, ${day.errorChecks} failed`,
-    `Last: ${day.lastCheckAt || "not checked"} (${seconds(day.lastDurationMs || 0)})`,
-    `Last open: ${day.lastAvailableAt || "not seen today"}`,
-    day.lastHeading ? `Page: ${day.lastHeading}` : "",
-    day.lastError ? `Error: ${day.lastError}` : "",
+    `Checks today: ${day.totalChecks}`,
+    `Open today: ${day.availableChecks}`,
+    `Last check: ${day.lastCheckAt || "not checked"}`,
+    day.lastError ? `Issue: ${day.lastError}` : "",
     START_URL
   ]
     .filter(Boolean)
@@ -423,11 +681,10 @@ function buildSummaryMessage(day) {
 
 function buildAvailableAlert(result) {
   return [
-    `Oakridge: ${CATEGORY_LABEL} may be open.`,
-    "Closed message not found.",
+    "Oakridge open",
+    `${CATEGORY_LABEL} form is live`,
     `Checked: ${result.checkedAtLocal}`,
-    result.heading ? `Page: ${result.heading}` : "",
-    START_URL
+    result.checkedUrl || START_URL
   ]
     .filter(Boolean)
     .join("\n");
@@ -435,11 +692,13 @@ function buildAvailableAlert(result) {
 
 function buildErrorAlert(result) {
   return [
-    "Oakridge checker problem.",
-    `${CATEGORY_LABEL} check failed at ${result.checkedAtLocal}.`,
-    `Error: ${result.error || "Unknown error"}`,
-    START_URL
-  ].join("\n");
+    "Oakridge checker problem",
+    `Checked: ${result.checkedAtLocal}`,
+    result.error || "Unknown error",
+    result.checkedUrl || START_URL
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function mockResult(status, startedAt) {
@@ -449,6 +708,12 @@ function mockResult(status, startedAt) {
     : "unavailable";
   return {
     status: normalized,
+    classification:
+      normalized === "available"
+        ? "mock-open-page"
+        : normalized === "error"
+          ? "mock-error"
+          : "mock-closed-page",
     checkedAtIso: new Date().toISOString(),
     checkedAtLocal: now.display,
     dateKey: now.dateKey,
@@ -457,16 +722,86 @@ function mockResult(status, startedAt) {
     heading:
       process.env.MOCK_HEADING ||
       (normalized === "available"
-        ? `${CATEGORY_LABEL} request`
+        ? CATEGORY_LABEL
         : normalized === "error"
           ? ""
           : `${CATEGORY_LABEL} is currently unavailable.`),
+    pageTitle:
+      normalized === "available"
+        ? "Select Questionnaire"
+        : normalized === "error"
+          ? ""
+          : "Start Online Consultation",
+    pageTextSnippet:
+      normalized === "available"
+        ? "Select Questionnaire ..."
+        : normalized === "error"
+          ? ""
+          : `${CATEGORY_LABEL} is currently unavailable.`,
     error:
       normalized === "error"
         ? process.env.MOCK_ERROR || "Mock website layout error."
         : "",
-    checkedUrl: START_URL
+    checkedUrl:
+      normalized === "available"
+        ? "https://systmonline.tpp-uk.com/2/OnlineConsultationSelectQuestionnaire"
+        : START_URL,
+    trace: [
+      {
+        step: 1,
+        url: START_URL,
+        responseUrl: START_URL,
+        status: 200,
+        location: "",
+        cookieNames: ["JSESSIONID"]
+      }
+    ]
   };
+}
+
+async function fetchWithSession(url, jar, trace, redirectCount = 0) {
+  const cookie = cookieHeaderFromJar(jar);
+  const response = await fetch(url, {
+    redirect: "manual",
+    signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
+    headers: {
+      ...(cookie ? { cookie } : {}),
+      "user-agent": USER_AGENT
+    }
+  });
+
+  updateCookieJar(jar, response.headers);
+
+  const locationHeader = response.headers.get("location");
+  const nextUrl = locationHeader ? new URL(locationHeader, response.url).href : "";
+  trace.push({
+    step: trace.length + 1,
+    url,
+    responseUrl: response.url,
+    status: response.status,
+    location: nextUrl,
+    cookieNames: cookieNamesFromJar(jar)
+  });
+
+  if (response.status >= 300 && response.status < 400) {
+    if (!nextUrl) {
+      throw createCheckError("Website redirected without a location header.", {
+        checkedUrl: response.url,
+        trace,
+        classification: "redirect-without-location"
+      });
+    }
+    if (redirectCount >= MAX_REDIRECTS) {
+      throw createCheckError("Website redirected too many times.", {
+        checkedUrl: nextUrl,
+        trace,
+        classification: "too-many-redirects"
+      });
+    }
+    return fetchWithSession(nextUrl, jar, trace, redirectCount + 1);
+  }
+
+  return response;
 }
 
 async function checkWebsite() {
@@ -477,65 +812,121 @@ async function checkWebsite() {
     return mockResult(MOCK_STATUS, startedAt);
   }
 
-  const startResponse = await fetch(START_URL, {
-    redirect: "follow",
-    signal: AbortSignal.timeout(20000),
-    headers: { "user-agent": USER_AGENT }
-  });
+  const trace = [];
+  const jar = createCookieJar();
+  const startResponse = await fetchWithSession(START_URL, jar, trace);
 
   if (!startResponse.ok) {
-    throw new Error(`Start page returned HTTP ${startResponse.status}`);
+    throw createCheckError(`Start page returned HTTP ${startResponse.status}`, {
+      checkedUrl: startResponse.url,
+      trace,
+      classification: "start-page-http-error"
+    });
   }
 
-  const cookie = cookieHeaderFrom(startResponse);
   const startHtml = await startResponse.text();
   const checkUrl = extractCategoryUrl(startHtml, startResponse.url);
-  const response = await fetch(checkUrl, {
-    redirect: "follow",
-    signal: AbortSignal.timeout(20000),
-    headers: {
-      ...(cookie ? { cookie } : {}),
-      "user-agent": USER_AGENT
-    }
-  });
+  const response = await fetchWithSession(checkUrl, jar, trace);
 
   if (!response.ok) {
-    throw new Error(`Website returned HTTP ${response.status}`);
+    throw createCheckError(`Website returned HTTP ${response.status}`, {
+      checkedUrl: response.url,
+      trace,
+      classification: "final-page-http-error"
+    });
   }
 
   const html = await response.text();
   const pageText = htmlToText(html);
+  const snippet = pageSnippet(pageText);
   const heading = extractHeading(html);
+  const pageTitle = extractTitle(html);
+  const checkedUrl = response.url;
 
-  if (looksLikeProblemPage(pageText, heading)) {
-    throw new Error("Website returned the SystmConnect problem page.");
+  if (looksUnavailable(pageText)) {
+    return {
+      status: "unavailable",
+      classification: "closed-message-detected",
+      checkedAtIso: new Date().toISOString(),
+      checkedAtLocal: now.display,
+      dateKey: now.dateKey,
+      time: now.time,
+      durationMs: Date.now() - startedAt,
+      heading,
+      pageTitle,
+      pageTextSnippet: snippet,
+      error: "",
+      checkedUrl,
+      trace
+    };
   }
 
-  return {
-    status: looksUnavailable(pageText) ? "unavailable" : "available",
-    checkedAtIso: new Date().toISOString(),
-    checkedAtLocal: now.display,
-    dateKey: now.dateKey,
-    time: now.time,
-    durationMs: Date.now() - startedAt,
+  if (looksLikeProblemPage(pageText, heading, pageTitle)) {
+    throw createCheckError("Website returned the SystmConnect problem page.", {
+      heading,
+      pageTitle,
+      pageTextSnippet: snippet,
+      checkedUrl,
+      trace,
+      classification: "problem-page"
+    });
+  }
+
+  if (looksLikeInvalidSessionPage(pageText, heading, pageTitle)) {
+    throw createCheckError("Website returned an invalid session page.", {
+      heading,
+      pageTitle,
+      pageTextSnippet: snippet,
+      checkedUrl,
+      trace,
+      classification: "invalid-session-page"
+    });
+  }
+
+  if (looksLikeOpenQuestionnairePage(checkedUrl, heading, pageText, pageTitle)) {
+    return {
+      status: "available",
+      classification: "questionnaire-open",
+      checkedAtIso: new Date().toISOString(),
+      checkedAtLocal: now.display,
+      dateKey: now.dateKey,
+      time: now.time,
+      durationMs: Date.now() - startedAt,
+      heading,
+      pageTitle,
+      pageTextSnippet: snippet,
+      error: "",
+      checkedUrl,
+      trace
+    };
+  }
+
+  throw createCheckError("Website returned an unrecognised page.", {
     heading,
-    error: "",
-    checkedUrl: response.url
-  };
+    pageTitle,
+    pageTextSnippet: snippet,
+    checkedUrl,
+    trace,
+    classification: "unrecognised-page"
+  });
 }
 
 function errorResult(error, startedAt) {
   const now = londonTime();
   return {
     status: "error",
+    classification: error.classification || "runtime-error",
     checkedAtIso: new Date().toISOString(),
     checkedAtLocal: now.display,
     dateKey: now.dateKey,
     time: now.time,
     durationMs: Date.now() - startedAt,
-    heading: "",
+    heading: error.heading || "",
+    pageTitle: error.pageTitle || "",
+    pageTextSnippet: error.pageTextSnippet || "",
     error: cleanText(error.message).slice(0, 500),
-    checkedUrl: START_URL
+    checkedUrl: error.checkedUrl || START_URL,
+    trace: Array.isArray(error.trace) ? error.trace : []
   };
 }
 
@@ -555,33 +946,66 @@ try {
 
 const state = await readState();
 const { day, previousStatus } = recordCheck(state, result);
-await writeState(state);
+await writeStateArtifacts(state);
 
-if (shouldSendAvailableAlert(day, result, previousStatus)) {
-  await sendTelegram(buildAvailableAlert(result));
-  recordAlert(day, "available", result);
-  await writeState(state);
-  console.log("Possible opening detected. Telegram alert sent.");
+const notifications = [];
+let notificationError = null;
+
+try {
+  if (shouldSendAvailableAlert(day, result, previousStatus)) {
+    await sendTelegram(buildAvailableAlert(result));
+    recordAlert(day, "available", result);
+    notifications.push("available");
+    await writeStateArtifacts(state);
+    console.log("Opening detected. Telegram alert sent.");
+  }
+
+  if (shouldSendErrorAlert(day, result, previousStatus)) {
+    await sendTelegram(buildErrorAlert(result));
+    recordAlert(day, "error", result);
+    notifications.push("error");
+    await writeStateArtifacts(state);
+    console.log("Checker problem detected. Telegram alert sent.");
+  }
+
+  if (SEND_STATUS_MESSAGE || SEND_CLOSED_STATUS) {
+    await sendTelegram(buildSummaryMessage(day));
+    recordAlert(day, "health", result);
+    notifications.push("health");
+    await writeStateArtifacts(state);
+    console.log("Sent Telegram summary.");
+  }
+} catch (error) {
+  notificationError = error;
 }
 
-if (shouldSendErrorAlert(day, result, previousStatus)) {
-  await sendTelegram(buildErrorAlert(result));
-  recordAlert(day, "error", result);
-  await writeState(state);
-  console.log("Checker problem detected. Telegram alert sent.");
-}
+await appendLogEntry({
+  checkedAtIso: result.checkedAtIso,
+  checkedAtLocal: result.checkedAtLocal,
+  status: result.status,
+  classification: result.classification || "",
+  previousStatus,
+  notifications,
+  heading: result.heading || "",
+  pageTitle: result.pageTitle || "",
+  pageTextSnippet: result.pageTextSnippet || "",
+  error: result.error || "",
+  notificationError: notificationError ? cleanText(notificationError.message) : "",
+  checkedUrl: result.checkedUrl || "",
+  durationMs: result.durationMs,
+  trace: Array.isArray(result.trace) ? result.trace : []
+});
 
-if (SEND_STATUS_MESSAGE || SEND_CLOSED_STATUS) {
-  await sendTelegram(buildSummaryMessage(day));
-  recordAlert(day, "health", result);
-  await writeState(state);
-  console.log("Sent Telegram health summary.");
+if (notificationError) {
+  throw notificationError;
 }
 
 if (result.status === "error") {
-  console.log(`Website check had an error: ${result.error}`);
+  console.log(
+    `Website check failed: ${result.error} (${result.classification || "runtime-error"}).`
+  );
 } else {
   console.log(
-    `[${result.checkedAtLocal}] ${CATEGORY_LABEL} is ${statusLabel(result.status)}.`
+    `[${result.checkedAtLocal}] ${CATEGORY_LABEL} is ${statusLabel(result.status)} (${result.classification}).`
   );
 }

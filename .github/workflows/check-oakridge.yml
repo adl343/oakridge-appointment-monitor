@@ -14,15 +14,15 @@ on:
         default: false
         type: boolean
   schedule:
-    # GitHub cron uses UTC. This checks every 5 minutes through the UK morning.
-    - cron: "3,8,13,18,23,28,33,38,43,48,53,58 5-11 * * 1-5"
-    # Daily health summary after the morning monitoring window.
-    - cron: "15 11 * * 1-5"
+    # GitHub cron uses UTC. Start one monitor run each hour; the job itself checks every 5 minutes.
+    - cron: "2 5-17 * * *"
+    # Daily summary after the main monitoring window.
+    - cron: "59 17 * * *"
 
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 70
     permissions:
       contents: write
     concurrency:
@@ -42,17 +42,36 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Check the website and send Telegram alert
-        run: npm run check
+        shell: bash
+        run: |
+          if [ "${SEND_TEST_MESSAGE}" = "true" ]; then
+            npm run check
+            exit 0
+          fi
+
+          if [ "${RUN_MODE}" = "monitor_loop" ]; then
+            for check_number in $(seq 1 12); do
+              echo "Monitor check ${check_number}/12"
+              npm run check
+              if [ "${check_number}" -lt 12 ]; then
+                sleep 300
+              fi
+            done
+          else
+            npm run check
+          fi
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SEND_TEST_MESSAGE: ${{ github.event.inputs.send_test_message || 'false' }}
-          SEND_STATUS_MESSAGE: ${{ github.event.schedule == '15 11 * * 1-5' || github.event.inputs.send_status_message == 'true' }}
+          SEND_STATUS_MESSAGE: ${{ github.event.schedule == '59 17 * * *' || github.event.inputs.send_status_message == 'true' }}
+          RUN_MODE: ${{ github.event.schedule == '2 5-17 * * *' && 'monitor_loop' || 'single' }}
           ALERT_EVERY_AVAILABLE: "true"
           AVAILABLE_ALERT_COOLDOWN_MINUTES: "5"
           MAX_AVAILABLE_ALERTS_PER_DAY: "12"
           ERROR_ALERT_COOLDOWN_MINUTES: "60"
           MAX_ERROR_ALERTS_PER_DAY: "3"
+          MAX_LOG_LINES: "2000"
 
       - name: Save pattern tracking data
         if: ${{ success() && github.event.inputs.send_test_message != 'true' }}
@@ -60,6 +79,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/oakridge-status.json
+          if [ -f data/oakridge-check-log.jsonl ]; then
+            git add data/oakridge-check-log.jsonl
+          fi
+          if [ -f data/oakridge-pattern.json ]; then
+            git add data/oakridge-pattern.json
+          fi
           if git diff --cached --quiet; then
             echo "No tracking data changes to save."
           else
