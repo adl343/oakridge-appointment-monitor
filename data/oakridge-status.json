@@ -524,24 +524,24 @@
     },
     "2026-07-07": {
       "date": "2026-07-07",
-      "totalChecks": 2,
-      "availableChecks": 2,
+      "totalChecks": 3,
+      "availableChecks": 3,
       "unavailableChecks": 0,
       "errorChecks": 0,
       "slowChecks": 0,
-      "totalDurationMs": 3747,
+      "totalDurationMs": 5326,
       "slowestMs": 2367,
       "firstCheckAt": "7 Jul 2026, 09:19",
-      "lastCheckAt": "7 Jul 2026, 09:37",
+      "lastCheckAt": "7 Jul 2026, 09:40",
       "firstAvailableAt": "7 Jul 2026, 09:19",
-      "lastAvailableAt": "7 Jul 2026, 09:37",
+      "lastAvailableAt": "7 Jul 2026, 09:40",
       "firstUnavailableAt": "",
       "lastUnavailableAt": "",
       "lastStatus": "available",
       "lastStatusChangedAt": "7 Jul 2026, 09:19",
       "lastHeading": "New condition",
       "lastError": "",
-      "lastDurationMs": 2367,
+      "lastDurationMs": 1579,
       "lastCheckedUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultationSelectQuestionnaire",
       "availableAlertsSent": 2,
       "lastAvailableAlertAt": "7 Jul 2026, 09:37",
@@ -549,9 +549,9 @@
       "errorAlertsSent": 0,
       "lastErrorAlertAt": "",
       "lastErrorAlertAtIso": "",
-      "healthMessagesSent": 1,
-      "lastHealthMessageAt": "7 Jul 2026, 09:37",
-      "lastHealthMessageAtIso": "2026-07-07T08:37:14.641Z",
+      "healthMessagesSent": 2,
+      "lastHealthMessageAt": "7 Jul 2026, 09:40",
+      "lastHealthMessageAtIso": "2026-07-07T08:40:30.378Z",
       "transitions": [],
       "alerts": [
         {
@@ -579,6 +579,15 @@
           "classification": "questionnaire-open",
           "heading": "New condition",
           "error": ""
+        },
+        {
+          "type": "health",
+          "at": "7 Jul 2026, 09:40",
+          "iso": "2026-07-07T08:40:30.378Z",
+          "status": "available",
+          "classification": "questionnaire-open",
+          "heading": "New condition",
+          "error": ""
         }
       ],
       "checks": [
@@ -599,6 +608,60 @@
           "status": "available",
           "classification": "questionnaire-open",
           "durationMs": 2367,
+          "heading": "New condition",
+          "title": "Select Questionnaire",
+          "snippet": "Select Questionnaire Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition Please fill this in if you require help with a new health problem. ADHD (adult) ADHD (child) Allergies Autism (adult) Autism (child) Breast probl",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultationSelectQuestionnaire",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 302,
+              "location": "https://systmonline.tpp-uk.com/2/OnlineConsultationSelectQuestionnaire",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            },
+            {
+              "step": 3,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultationSelectQuestionnaire",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultationSelectQuestionnaire",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ]
+            }
+          ]
+        },
+        {
+          "at": "7 Jul 2026, 09:40",
+          "iso": "2026-07-07T08:40:30.378Z",
+          "time": "09:40",
+          "status": "available",
+          "classification": "questionnaire-open",
+          "durationMs": 1579,
           "heading": "New condition",
           "title": "Select Questionnaire",
           "snippet": "Select Questionnaire Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition Please fill this in if you require help with a new health problem. ADHD (adult) ADHD (child) Allergies Autism (adult) Autism (child) Breast probl",
@@ -693,5 +756,5 @@
       ]
     }
   },
-  "lastUpdatedAt": "2026-07-07T08:37:14.641Z"
+  "lastUpdatedAt": "2026-07-07T08:40:30.378Z"
 }
