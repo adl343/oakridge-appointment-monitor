@@ -68,7 +68,7 @@ jobs:
           RUN_MODE: ${{ github.event.schedule == '2 5-17 * * *' && 'monitor_loop' || 'single' }}
           ALERT_EVERY_AVAILABLE: "true"
           AVAILABLE_ALERT_COOLDOWN_MINUTES: "5"
-          MAX_AVAILABLE_ALERTS_PER_DAY: "12"
+          MAX_AVAILABLE_ALERTS_PER_DAY: "999"
           ERROR_ALERT_COOLDOWN_MINUTES: "60"
           MAX_ERROR_ALERTS_PER_DAY: "3"
           MAX_LOG_LINES: "2000"
