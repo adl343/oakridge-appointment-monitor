@@ -300,6 +300,36 @@ function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function isTrustedOpeningCheck(check) {
+  if (check.status !== "available") {
+    return false;
+  }
+
+  const heading = String(check.heading || "").toLowerCase();
+  const title = String(check.title || "").toLowerCase();
+  const snippet = String(check.snippet || "").toLowerCase();
+  const url = String(check.url || "").toLowerCase();
+  const classification = String(check.classification || "").toLowerCase();
+
+  if (
+    heading.includes("invalid session") ||
+    title.includes("invalid session") ||
+    snippet.includes("invalid session")
+  ) {
+    return false;
+  }
+
+  if (classification === "questionnaire-open") {
+    return true;
+  }
+
+  return (
+    heading === CATEGORY_LABEL.toLowerCase() ||
+    (url.includes("onlineconsultationselectquestionnaire") &&
+      heading === CATEGORY_LABEL.toLowerCase())
+  );
+}
+
 function buildPattern(state) {
   const days = Object.values(state.days || {})
     .map((day) => ensureDayShape(day))
@@ -316,7 +346,7 @@ function buildPattern(state) {
 
   const recentOpenings = days
     .map((day) => {
-      const openChecks = day.checks.filter((check) => check.status === "available");
+      const openChecks = day.checks.filter(isTrustedOpeningCheck);
       if (!openChecks.length) {
         return null;
       }
@@ -338,7 +368,7 @@ function buildPattern(state) {
     const weekdayDays = days.filter((day) => weekdayName(day.date) === weekday);
     const openingDays = weekdayDays
       .map((day) => {
-        const openChecks = day.checks.filter((check) => check.status === "available");
+        const openChecks = day.checks.filter(isTrustedOpeningCheck);
         if (!openChecks.length) {
           return null;
         }
