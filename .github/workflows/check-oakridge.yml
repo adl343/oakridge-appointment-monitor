@@ -13,20 +13,32 @@ on:
         required: false
         default: false
         type: boolean
+      mock_status:
+        description: "Send a mock alert for testing"
+        required: false
+        default: "live"
+        type: choice
+        options:
+          - live
+          - available
+          - unavailable
+          - error
   schedule:
-    # GitHub cron uses UTC. Start one monitor run each hour; the job itself checks every 5 minutes.
-    - cron: "2 5-17 * * *"
-    # Daily summary after the main monitoring window.
-    - cron: "59 17 * * *"
+    # GitHub cron uses UTC. Start fewer, longer monitor windows at off-peak minutes.
+    - cron: "17 5 * * *"
+    - cron: "17 10 * * *"
+    - cron: "17 15 * * *"
+    # Daily summary after the last monitoring window.
+    - cron: "25 20 * * *"
 
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 330
     permissions:
       contents: write
     concurrency:
-      group: oakridge-appointment-monitor
+      group: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.send_test_message == 'true' || github.event.inputs.mock_status != 'live') && format('oakridge-appointment-monitor-test-{0}', github.run_id) || 'oakridge-appointment-monitor-live' }}
       cancel-in-progress: false
     steps:
       - name: Get the files
@@ -50,11 +62,21 @@ jobs:
           fi
 
           if [ "${RUN_MODE}" = "monitor_loop" ]; then
-            for check_number in $(seq 1 12); do
-              echo "Monitor check ${check_number}/12"
+            for check_number in $(seq 1 "${MONITOR_LOOP_CHECKS}"); do
+              echo "Monitor check ${check_number}/${MONITOR_LOOP_CHECKS}"
+
+              next_delay_minutes=0
+              if [ "${check_number}" -lt "${MONITOR_LOOP_CHECKS}" ]; then
+                next_delay_minutes="${CHECK_INTERVAL_MINUTES}"
+              fi
+
+              MONITOR_CHECK_NUMBER="${check_number}" \
+              MONITOR_CHECK_TOTAL="${MONITOR_LOOP_CHECKS}" \
+              NEXT_CHECK_DELAY_MINUTES="${next_delay_minutes}" \
               npm run check
-              if [ "${check_number}" -lt 12 ]; then
-                sleep 300
+
+              if [ "${check_number}" -lt "${MONITOR_LOOP_CHECKS}" ]; then
+                sleep "${CHECK_INTERVAL_SECONDS}"
               fi
             done
           else
@@ -64,17 +86,29 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SEND_TEST_MESSAGE: ${{ github.event.inputs.send_test_message || 'false' }}
-          SEND_STATUS_MESSAGE: ${{ github.event.schedule == '59 17 * * *' || github.event.inputs.send_status_message == 'true' }}
-          RUN_MODE: ${{ github.event.schedule == '2 5-17 * * *' && 'monitor_loop' || 'single' }}
+          SEND_STATUS_MESSAGE: ${{ github.event.schedule == '25 20 * * *' || github.event.inputs.send_status_message == 'true' }}
+          RUN_MODE: ${{ github.event_name == 'schedule' && github.event.schedule != '25 20 * * *' && 'monitor_loop' || 'single' }}
+          RUN_TRIGGER: ${{ github.event_name == 'schedule' && github.event.schedule || github.event_name }}
+          RUN_SLOT_LABEL: ${{ github.event_name == 'schedule' && github.event.schedule || 'manual' }}
+          MONITOR_LOOP_CHECKS: "60"
+          CHECK_INTERVAL_MINUTES: "5"
+          CHECK_INTERVAL_SECONDS: "300"
           ALERT_EVERY_AVAILABLE: "true"
           AVAILABLE_ALERT_COOLDOWN_MINUTES: "5"
           MAX_AVAILABLE_ALERTS_PER_DAY: "999"
           ERROR_ALERT_COOLDOWN_MINUTES: "60"
           MAX_ERROR_ALERTS_PER_DAY: "3"
           MAX_LOG_LINES: "2000"
+          FETCH_RETRY_COUNT: "1"
+          FETCH_RETRY_DELAY_MS: "1500"
+          MOCK_STATUS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && github.event.inputs.mock_status || '' }}
+          MOCK_ERROR: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status == 'error' && 'GitHub Actions test: forced checker error.' || '' }}
+          STATE_PATH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && format('{0}/oakridge-test-status.json', runner.temp) || 'data/oakridge-status.json' }}
+          LOG_PATH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && format('{0}/oakridge-test-log.jsonl', runner.temp) || 'data/oakridge-check-log.jsonl' }}
+          PATTERN_PATH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && format('{0}/oakridge-test-pattern.json', runner.temp) || 'data/oakridge-pattern.json' }}
 
       - name: Save pattern tracking data
-        if: ${{ success() && github.event.inputs.send_test_message != 'true' }}
+        if: ${{ success() && github.event.inputs.send_test_message != 'true' && (github.event_name != 'workflow_dispatch' || github.event.inputs.mock_status == 'live' || github.event.inputs.mock_status == '') }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

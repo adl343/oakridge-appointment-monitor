@@ -17,8 +17,14 @@ const MAX_CHECKS_PER_DAY = numberEnv("MAX_CHECKS_PER_DAY", 200);
 const MAX_LOG_LINES = numberEnv("MAX_LOG_LINES", 1500);
 const SLOW_THRESHOLD_MS = numberEnv("SLOW_THRESHOLD_MS", 10000);
 const HTTP_TIMEOUT_MS = numberEnv("HTTP_TIMEOUT_MS", 20000);
+const FETCH_RETRY_COUNT = numberEnv("FETCH_RETRY_COUNT", 1);
+const FETCH_RETRY_DELAY_MS = numberEnv("FETCH_RETRY_DELAY_MS", 1500);
 const MAX_REDIRECTS = numberEnv("MAX_REDIRECTS", 5);
 const PAGE_TEXT_SNIPPET_LENGTH = numberEnv("PAGE_TEXT_SNIPPET_LENGTH", 280);
+const CHECK_INTERVAL_MINUTES = numberEnv("CHECK_INTERVAL_MINUTES", 5);
+const NEXT_CHECK_DELAY_MINUTES = numberEnv("NEXT_CHECK_DELAY_MINUTES", 0);
+const MONITOR_CHECK_NUMBER = numberEnv("MONITOR_CHECK_NUMBER", 0);
+const MONITOR_CHECK_TOTAL = numberEnv("MONITOR_CHECK_TOTAL", 0);
 const AVAILABLE_ALERT_COOLDOWN_MINUTES = numberEnv(
   "AVAILABLE_ALERT_COOLDOWN_MINUTES",
   5
@@ -32,6 +38,9 @@ const SEND_STATUS_MESSAGE = flagEnv("SEND_STATUS_MESSAGE");
 const ALERT_EVERY_AVAILABLE = flagEnv("ALERT_EVERY_AVAILABLE", true);
 const DRY_RUN_TELEGRAM = flagEnv("DRY_RUN_TELEGRAM");
 const MOCK_STATUS = process.env.MOCK_STATUS || "";
+const RUN_MODE = process.env.RUN_MODE || "";
+const RUN_TRIGGER = process.env.RUN_TRIGGER || "";
+const RUN_SLOT_LABEL = process.env.RUN_SLOT_LABEL || "";
 const USER_AGENT =
   "Mozilla/5.0 (compatible; OakridgeAppointmentChecker/1.1; +https://github.com/adl343/oakridge-appointment-monitor)";
 
@@ -46,6 +55,10 @@ function flagEnv(name, defaultValue = false) {
 function numberEnv(name, defaultValue) {
   const value = Number(process.env[name]);
   return Number.isFinite(value) ? value : defaultValue;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function sendTelegram(message) {
@@ -218,6 +231,60 @@ function createCheckError(message, details = {}) {
   return Object.assign(new Error(message), details);
 }
 
+function fetchErrorCode(error) {
+  return cleanText(error?.cause?.code || error?.code || "");
+}
+
+function describeFetchError(error) {
+  const message = cleanText(error?.message || String(error));
+  const code = fetchErrorCode(error);
+  if (!code || message.includes(code)) {
+    return message;
+  }
+  return `${message} (${code})`;
+}
+
+function classifyFetchError(error) {
+  const name = cleanText(error?.name || "");
+  const code = fetchErrorCode(error);
+  const message = cleanText(error?.message || "").toLowerCase();
+
+  if (
+    name === "AbortError" ||
+    name === "TimeoutError" ||
+    code.includes("TIMEOUT") ||
+    message.includes("timeout")
+  ) {
+    return "network-timeout";
+  }
+
+  return "network-request-failed";
+}
+
+function isRetryableFetchError(error) {
+  const name = cleanText(error?.name || "");
+  const code = fetchErrorCode(error).toUpperCase();
+  const message = cleanText(error?.message || "").toLowerCase();
+
+  return (
+    name === "AbortError" ||
+    name === "TimeoutError" ||
+    message.includes("fetch failed") ||
+    [
+      "ECONNABORTED",
+      "ECONNREFUSED",
+      "ECONNRESET",
+      "EAI_AGAIN",
+      "ENETUNREACH",
+      "ENOTFOUND",
+      "ETIMEDOUT",
+      "UND_ERR_CONNECT_TIMEOUT",
+      "UND_ERR_HEADERS_TIMEOUT",
+      "UND_ERR_SOCKET"
+    ].includes(code)
+  );
+}
+
 function londonTime(date = new Date()) {
   const parts = Object.fromEntries(
     new Intl.DateTimeFormat("en-GB", {
@@ -241,6 +308,36 @@ function londonTime(date = new Date()) {
       timeStyle: "short"
     })
   };
+}
+
+function buildRunContext(result) {
+  const context = {
+    eventName: cleanText(process.env.GITHUB_EVENT_NAME || ""),
+    trigger: cleanText(RUN_TRIGGER),
+    runMode: cleanText(RUN_MODE),
+    slot: cleanText(RUN_SLOT_LABEL),
+    job: cleanText(process.env.GITHUB_JOB || ""),
+    runId: cleanText(process.env.GITHUB_RUN_ID || ""),
+    runNumber: cleanText(process.env.GITHUB_RUN_NUMBER || ""),
+    runAttempt: cleanText(process.env.GITHUB_RUN_ATTEMPT || ""),
+    checkNumber: MONITOR_CHECK_NUMBER || 0,
+    checkTotal: MONITOR_CHECK_TOTAL || 0,
+    checkIntervalMinutes: CHECK_INTERVAL_MINUTES || 0,
+    nextCheckDelayMinutes: NEXT_CHECK_DELAY_MINUTES || 0
+  };
+
+  if (NEXT_CHECK_DELAY_MINUTES > 0) {
+    const nextCheckAt = new Date(
+      Date.parse(result.checkedAtIso) + NEXT_CHECK_DELAY_MINUTES * 60000
+    );
+    context.nextExpectedCheckAtIso = nextCheckAt.toISOString();
+    context.nextExpectedCheckAtLocal = londonTime(nextCheckAt).display;
+  } else {
+    context.nextExpectedCheckAtIso = "";
+    context.nextExpectedCheckAtLocal = "";
+  }
+
+  return context;
 }
 
 async function readState() {
@@ -494,6 +591,9 @@ function emptyDay(dateKey) {
     lastDurationMs: 0,
     lastCheckedUrl: "",
     lastTrace: [],
+    lastRunContext: {},
+    nextExpectedCheckAt: "",
+    nextExpectedCheckAtIso: "",
     availableAlertsSent: 0,
     lastAvailableAlertAt: "",
     lastAvailableAlertAtIso: "",
@@ -528,9 +628,17 @@ function pruneOldDays(state) {
 }
 
 function recordCheck(state, result) {
+  const runContext = buildRunContext(result);
+
   state.version = 3;
   state.categoryLabel = CATEGORY_LABEL;
   state.lastUpdatedAt = result.checkedAtIso;
+  state.monitoring = {
+    ...runContext,
+    lastStatus: result.status,
+    lastCheckedAt: result.checkedAtLocal,
+    lastCheckedAtIso: result.checkedAtIso
+  };
   state.days ||= {};
 
   const day = ensureDayShape(
@@ -551,6 +659,9 @@ function recordCheck(state, result) {
   day.lastError = result.error || "";
   day.lastCheckedUrl = result.checkedUrl || "";
   day.lastTrace = Array.isArray(result.trace) ? result.trace : [];
+  day.lastRunContext = runContext;
+  day.nextExpectedCheckAt = runContext.nextExpectedCheckAtLocal || "";
+  day.nextExpectedCheckAtIso = runContext.nextExpectedCheckAtIso || "";
 
   if (result.durationMs >= SLOW_THRESHOLD_MS) {
     day.slowChecks += 1;
@@ -699,11 +810,9 @@ function buildSummaryMessage(day) {
   return [
     "Oakridge update",
     `${CATEGORY_LABEL}: ${statusLabel(day.lastStatus)}`,
-    `Checks today: ${day.totalChecks}`,
-    `Open today: ${day.availableChecks}`,
-    `Last check: ${day.lastCheckAt || "not checked"}`,
+    `Checks: ${day.totalChecks} | Open: ${day.availableChecks}`,
+    `Last: ${day.lastCheckAt || "not checked"}`,
     day.lastError ? `Issue: ${day.lastError}` : "",
-    START_URL
   ]
     .filter(Boolean)
     .join("\n");
@@ -712,8 +821,8 @@ function buildSummaryMessage(day) {
 function buildAvailableAlert(result) {
   return [
     "Oakridge open",
-    `${CATEGORY_LABEL} form is live`,
-    `Checked: ${result.checkedAtLocal}`,
+    CATEGORY_LABEL,
+    result.checkedAtLocal,
     result.checkedUrl || START_URL
   ]
     .filter(Boolean)
@@ -722,8 +831,8 @@ function buildAvailableAlert(result) {
 
 function buildErrorAlert(result) {
   return [
-    "Oakridge checker problem",
-    `Checked: ${result.checkedAtLocal}`,
+    "Oakridge issue",
+    result.checkedAtLocal,
     result.error || "Unknown error",
     result.checkedUrl || START_URL
   ]
@@ -791,14 +900,51 @@ function mockResult(status, startedAt) {
 
 async function fetchWithSession(url, jar, trace, redirectCount = 0) {
   const cookie = cookieHeaderFromJar(jar);
-  const response = await fetch(url, {
-    redirect: "manual",
-    signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
-    headers: {
-      ...(cookie ? { cookie } : {}),
-      "user-agent": USER_AGENT
+  let response;
+  let attempt = 0;
+
+  while (true) {
+    attempt += 1;
+    try {
+      response = await fetch(url, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
+        headers: {
+          ...(cookie ? { cookie } : {}),
+          "user-agent": USER_AGENT
+        }
+      });
+      break;
+    } catch (error) {
+      const retryable = isRetryableFetchError(error);
+      const fetchError = describeFetchError(error);
+      const classification = classifyFetchError(error);
+
+      trace.push({
+        step: trace.length + 1,
+        url,
+        responseUrl: "",
+        status: 0,
+        location: "",
+        cookieNames: cookieNamesFromJar(jar),
+        attempt,
+        fetchError,
+        retryable,
+        retryDelayMs:
+          retryable && attempt <= FETCH_RETRY_COUNT ? FETCH_RETRY_DELAY_MS : 0
+      });
+
+      if (!retryable || attempt > FETCH_RETRY_COUNT) {
+        throw createCheckError(`Website request failed: ${fetchError}`, {
+          checkedUrl: url,
+          trace,
+          classification
+        });
+      }
+
+      await sleep(FETCH_RETRY_DELAY_MS);
     }
-  });
+  }
 
   updateCookieJar(jar, response.headers);
 
@@ -810,7 +956,8 @@ async function fetchWithSession(url, jar, trace, redirectCount = 0) {
     responseUrl: response.url,
     status: response.status,
     location: nextUrl,
-    cookieNames: cookieNamesFromJar(jar)
+    cookieNames: cookieNamesFromJar(jar),
+    attempt
   });
 
   if (response.status >= 300 && response.status < 400) {
@@ -961,7 +1108,7 @@ function errorResult(error, startedAt) {
 }
 
 if (SEND_TEST_MESSAGE) {
-  await sendTelegram("Oakridge test: Telegram is connected.");
+  await sendTelegram("Oakridge test: Telegram OK.");
   console.log("Sent Telegram test message.");
   process.exit(0);
 }
@@ -1023,7 +1170,8 @@ await appendLogEntry({
   notificationError: notificationError ? cleanText(notificationError.message) : "",
   checkedUrl: result.checkedUrl || "",
   durationMs: result.durationMs,
-  trace: Array.isArray(result.trace) ? result.trace : []
+  trace: Array.isArray(result.trace) ? result.trace : [],
+  runContext: buildRunContext(result)
 });
 
 if (notificationError) {
