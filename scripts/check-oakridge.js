@@ -823,7 +823,7 @@ function buildAvailableAlert(result) {
     "Oakridge open",
     CATEGORY_LABEL,
     result.checkedAtLocal,
-    result.checkedUrl || START_URL
+    START_URL
   ]
     .filter(Boolean)
     .join("\n");
@@ -834,7 +834,7 @@ function buildErrorAlert(result) {
     "Oakridge issue",
     result.checkedAtLocal,
     result.error || "Unknown error",
-    result.checkedUrl || START_URL
+    START_URL
   ]
     .filter(Boolean)
     .join("\n");

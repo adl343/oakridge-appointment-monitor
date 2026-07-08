@@ -38,7 +38,7 @@ jobs:
     permissions:
       contents: write
     concurrency:
-      group: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.send_test_message == 'true' || github.event.inputs.mock_status != 'live') && format('oakridge-appointment-monitor-test-{0}', github.run_id) || 'oakridge-appointment-monitor-live' }}
+      group: ${{ github.event_name == 'workflow_dispatch' && format('oakridge-appointment-monitor-manual-{0}', github.run_id) || 'oakridge-appointment-monitor-live' }}
       cancel-in-progress: false
     steps:
       - name: Get the files
