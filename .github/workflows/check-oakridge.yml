@@ -101,11 +101,11 @@ jobs:
           MAX_LOG_LINES: "2000"
           FETCH_RETRY_COUNT: "1"
           FETCH_RETRY_DELAY_MS: "1500"
-          MOCK_STATUS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && github.event.inputs.mock_status || '' }}
-          MOCK_ERROR: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status == 'error' && 'GitHub Actions test: forced checker error.' || '' }}
-          STATE_PATH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && format('{0}/oakridge-test-status.json', runner.temp) || 'data/oakridge-status.json' }}
-          LOG_PATH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && format('{0}/oakridge-test-log.jsonl', runner.temp) || 'data/oakridge-check-log.jsonl' }}
-          PATTERN_PATH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && format('{0}/oakridge-test-pattern.json', runner.temp) || 'data/oakridge-pattern.json' }}
+          MOCK_STATUS: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && github.event.inputs.mock_status || '' }}"
+          MOCK_ERROR: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status == 'error' && 'GitHub Actions test: forced checker error.' || '' }}"
+          STATE_PATH: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && format('{0}/oakridge-test-status.json', runner.temp) || 'data/oakridge-status.json' }}"
+          LOG_PATH: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && format('{0}/oakridge-test-log.jsonl', runner.temp) || 'data/oakridge-check-log.jsonl' }}"
+          PATTERN_PATH: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mock_status != 'live' && format('{0}/oakridge-test-pattern.json', runner.temp) || 'data/oakridge-pattern.json' }}"
 
       - name: Save pattern tracking data
         if: ${{ success() && github.event.inputs.send_test_message != 'true' && (github.event_name != 'workflow_dispatch' || github.event.inputs.mock_status == 'live' || github.event.inputs.mock_status == '') }}
