@@ -61,9 +61,37 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function sendTelegram(message) {
+function telegramButton(url = START_URL, label = "Open Oakridge") {
+  return {
+    inline_keyboard: [[{ text: label, url }]]
+  };
+}
+
+async function sendTelegram(message, options = {}) {
+  const payload = {
+    chat_id: CHAT_ID,
+    text: message,
+    disable_web_page_preview: true,
+    reply_markup: telegramButton(
+      options.buttonUrl || START_URL,
+      options.buttonLabel || "Open Oakridge"
+    )
+  };
+
   if (DRY_RUN_TELEGRAM) {
-    console.log(["DRY RUN TELEGRAM MESSAGE", message].join("\n"));
+    console.log(
+      [
+        "DRY RUN TELEGRAM PAYLOAD",
+        JSON.stringify(
+          {
+            ...payload,
+            chat_id: payload.chat_id ? "[redacted]" : ""
+          },
+          null,
+          2
+        )
+      ].join("\n")
+    );
     return;
   }
 
@@ -74,11 +102,7 @@ async function sendTelegram(message) {
   const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      chat_id: CHAT_ID,
-      text: message,
-      disable_web_page_preview: true
-    })
+    body: JSON.stringify(payload)
   });
   const result = await response.json();
   if (!result.ok) {
