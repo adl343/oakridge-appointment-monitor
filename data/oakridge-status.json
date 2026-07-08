@@ -47,7 +47,10 @@
       "healthMessagesSent": 0,
       "lastHealthMessageAt": "",
       "lastHealthMessageAtIso": "",
-      "alerts": []
+      "alerts": [],
+      "lastRunContext": {},
+      "nextExpectedCheckAt": "",
+      "nextExpectedCheckAtIso": ""
     },
     "2026-06-29": {
       "date": "2026-06-29",
@@ -102,7 +105,10 @@
       "healthMessagesSent": 0,
       "lastHealthMessageAt": "",
       "lastHealthMessageAtIso": "",
-      "alerts": []
+      "alerts": [],
+      "lastRunContext": {},
+      "nextExpectedCheckAt": "",
+      "nextExpectedCheckAtIso": ""
     },
     "2026-06-30": {
       "date": "2026-06-30",
@@ -157,7 +163,10 @@
       "healthMessagesSent": 0,
       "lastHealthMessageAt": "",
       "lastHealthMessageAtIso": "",
-      "alerts": []
+      "alerts": [],
+      "lastRunContext": {},
+      "nextExpectedCheckAt": "",
+      "nextExpectedCheckAtIso": ""
     },
     "2026-07-01": {
       "date": "2026-07-01",
@@ -221,7 +230,10 @@
       "healthMessagesSent": 0,
       "lastHealthMessageAt": "",
       "lastHealthMessageAtIso": "",
-      "alerts": []
+      "alerts": [],
+      "lastRunContext": {},
+      "nextExpectedCheckAt": "",
+      "nextExpectedCheckAtIso": ""
     },
     "2026-07-02": {
       "date": "2026-07-02",
@@ -276,7 +288,10 @@
       "healthMessagesSent": 0,
       "lastHealthMessageAt": "",
       "lastHealthMessageAtIso": "",
-      "alerts": []
+      "alerts": [],
+      "lastRunContext": {},
+      "nextExpectedCheckAt": "",
+      "nextExpectedCheckAtIso": ""
     },
     "2026-07-03": {
       "date": "2026-07-03",
@@ -348,7 +363,10 @@
       "healthMessagesSent": 0,
       "lastHealthMessageAt": "",
       "lastHealthMessageAtIso": "",
-      "alerts": []
+      "alerts": [],
+      "lastRunContext": {},
+      "nextExpectedCheckAt": "",
+      "nextExpectedCheckAtIso": ""
     },
     "2026-07-04": {
       "date": "2026-07-04",
@@ -424,7 +442,10 @@
       "lastPageTitle": "",
       "lastSnippet": "",
       "lastClassification": "",
-      "lastTrace": []
+      "lastTrace": [],
+      "lastRunContext": {},
+      "nextExpectedCheckAt": "",
+      "nextExpectedCheckAtIso": ""
     },
     "2026-07-06": {
       "date": "2026-07-06",
@@ -520,7 +541,10 @@
       "lastPageTitle": "",
       "lastSnippet": "",
       "lastClassification": "",
-      "lastTrace": []
+      "lastTrace": [],
+      "lastRunContext": {},
+      "nextExpectedCheckAt": "",
+      "nextExpectedCheckAtIso": ""
     },
     "2026-07-07": {
       "date": "2026-07-07",
@@ -2255,8 +2279,169 @@
             "OrgIdForError"
           ]
         }
+      ],
+      "lastRunContext": {},
+      "nextExpectedCheckAt": "",
+      "nextExpectedCheckAtIso": ""
+    },
+    "2026-07-08": {
+      "date": "2026-07-08",
+      "totalChecks": 1,
+      "availableChecks": 0,
+      "unavailableChecks": 1,
+      "errorChecks": 0,
+      "slowChecks": 0,
+      "totalDurationMs": 1650,
+      "slowestMs": 1650,
+      "firstCheckAt": "8 Jul 2026, 01:09",
+      "lastCheckAt": "8 Jul 2026, 01:09",
+      "firstAvailableAt": "",
+      "lastAvailableAt": "",
+      "firstUnavailableAt": "8 Jul 2026, 01:09",
+      "lastUnavailableAt": "8 Jul 2026, 01:09",
+      "lastStatus": "unavailable",
+      "lastStatusChangedAt": "8 Jul 2026, 01:09",
+      "lastHeading": "New condition is currently unavailable.",
+      "lastPageTitle": "Service Unavailable",
+      "lastSnippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+      "lastClassification": "closed-message-detected",
+      "lastError": "",
+      "lastDurationMs": 1650,
+      "lastCheckedUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+      "lastTrace": [
+        {
+          "step": 1,
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+          "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+          "status": 200,
+          "location": "",
+          "cookieNames": [
+            "JSESSIONID",
+            "onConFromNhsApp",
+            "UID",
+            "OrgIdForError"
+          ],
+          "attempt": 1
+        },
+        {
+          "step": 2,
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "status": 200,
+          "location": "",
+          "cookieNames": [
+            "JSESSIONID",
+            "onConFromNhsApp",
+            "UID",
+            "OrgIdForError"
+          ],
+          "attempt": 1
+        }
+      ],
+      "lastRunContext": {
+        "eventName": "workflow_dispatch",
+        "trigger": "workflow_dispatch",
+        "runMode": "single",
+        "slot": "manual",
+        "job": "check",
+        "runId": "28907649487",
+        "runNumber": "44",
+        "runAttempt": "1",
+        "checkNumber": 0,
+        "checkTotal": 0,
+        "checkIntervalMinutes": 5,
+        "nextCheckDelayMinutes": 0,
+        "nextExpectedCheckAtIso": "",
+        "nextExpectedCheckAtLocal": ""
+      },
+      "nextExpectedCheckAt": "",
+      "nextExpectedCheckAtIso": "",
+      "availableAlertsSent": 0,
+      "lastAvailableAlertAt": "",
+      "lastAvailableAlertAtIso": "",
+      "errorAlertsSent": 0,
+      "lastErrorAlertAt": "",
+      "lastErrorAlertAtIso": "",
+      "healthMessagesSent": 1,
+      "lastHealthMessageAt": "8 Jul 2026, 01:09",
+      "lastHealthMessageAtIso": "2026-07-08T00:09:51.696Z",
+      "transitions": [],
+      "alerts": [
+        {
+          "type": "health",
+          "at": "8 Jul 2026, 01:09",
+          "iso": "2026-07-08T00:09:51.696Z",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "heading": "New condition is currently unavailable.",
+          "error": ""
+        }
+      ],
+      "checks": [
+        {
+          "at": "8 Jul 2026, 01:09",
+          "iso": "2026-07-08T00:09:51.696Z",
+          "time": "01:09",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1650,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ],
+              "attempt": 1
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ],
+              "attempt": 1
+            }
+          ]
+        }
       ]
     }
   },
-  "lastUpdatedAt": "2026-07-07T20:01:58.223Z"
+  "lastUpdatedAt": "2026-07-08T00:09:51.696Z",
+  "monitoring": {
+    "eventName": "workflow_dispatch",
+    "trigger": "workflow_dispatch",
+    "runMode": "single",
+    "slot": "manual",
+    "job": "check",
+    "runId": "28907649487",
+    "runNumber": "44",
+    "runAttempt": "1",
+    "checkNumber": 0,
+    "checkTotal": 0,
+    "checkIntervalMinutes": 5,
+    "nextCheckDelayMinutes": 0,
+    "nextExpectedCheckAtIso": "",
+    "nextExpectedCheckAtLocal": "",
+    "lastStatus": "unavailable",
+    "lastCheckedAt": "8 Jul 2026, 01:09",
+    "lastCheckedAtIso": "2026-07-08T00:09:51.696Z"
+  }
 }
