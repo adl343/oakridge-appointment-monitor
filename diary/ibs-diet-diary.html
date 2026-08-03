@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>IBS Diet Diary</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1c2733;
+    --muted: #5c6b7a;
+    --line: #dde3ea;
+    --accent: #2f6f4f;
+    --accent-soft: #e3f0e9;
+    --meal: #2f6f4f;
+    --symptom: #a8543a;
+    --symptom-soft: #f6e8e2;
+    --danger: #b3402f;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181f;
+      --card: #1b2530;
+      --text: #e8edf2;
+      --muted: #9aa8b5;
+      --line: #2c3947;
+      --accent: #6cb890;
+      --accent-soft: #22352b;
+      --meal: #6cb890;
+      --symptom: #d98d6f;
+      --symptom-soft: #3a2a22;
+      --danger: #e07b6a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  header {
+    padding: 14px 16px 10px;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  header h1 { margin: 0; font-size: 1.25rem; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: 0.85rem; }
+  main { max-width: 640px; margin: 0 auto; padding: 0 12px 90px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .card h2 { margin: 0 0 10px; font-size: 1rem; }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin: 10px 0 4px; }
+  input[type="text"], input[type="time"], input[type="date"], select, textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 44px; }
+  button {
+    font-family: inherit;
+    font-size: 1rem;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    min-height: 44px;
+  }
+  button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  @media (prefers-color-scheme: dark) {
+    button.primary { color: #0e1a13; }
+  }
+  button.small { min-height: 34px; padding: 4px 10px; font-size: 0.85rem; }
+  button.danger { color: var(--danger); }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  .seg {
+    display: flex;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .seg button {
+    flex: 1;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+  .seg button.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips button {
+    min-height: 36px;
+    padding: 5px 12px;
+    font-size: 0.9rem;
+    border-radius: 999px;
+  }
+  .chips button.active {
+    background: var(--symptom-soft);
+    border-color: var(--symptom);
+    color: var(--symptom);
+    font-weight: 600;
+  }
+  .sev { display: flex; gap: 6px; }
+  .sev button { flex: 1; min-height: 40px; padding: 6px 0; }
+  .sev button.active { background: var(--symptom-soft); border-color: var(--symptom); color: var(--symptom); font-weight: 700; }
+  .daynav { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .daynav button { min-width: 44px; }
+  .daynav .label { flex: 1; text-align: center; font-weight: 600; }
+  .daynav input[type="date"] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .entry {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+    align-items: flex-start;
+  }
+  .entry:first-of-type { border-top: none; }
+  .entry .time { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.9rem; padding-top: 2px; min-width: 46px; }
+  .entry .body { flex: 1; min-width: 0; }
+  .entry .body .text { overflow-wrap: break-word; }
+  .entry .body .notes { color: var(--muted); font-size: 0.85rem; }
+  .entry .actions { display: flex; gap: 4px; }
+  .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .tag.meal { background: var(--accent-soft); color: var(--meal); }
+  .tag.symptom { background: var(--symptom-soft); color: var(--symptom); }
+  .empty { color: var(--muted); text-align: center; padding: 18px 0; }
+  nav.tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  nav.tabs button {
+    flex: 1;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 12px 4px;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  nav.tabs button.active { color: var(--accent); font-weight: 700; }
+  .hist-day {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: none;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+    padding: 10px 0;
+  }
+  .hist-day:first-of-type { border-top: none; }
+  .hist-day .d { font-weight: 600; }
+  .hist-day .s { color: var(--muted); font-size: 0.87rem; }
+  table.trig { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  table.trig th, table.trig td { text-align: left; padding: 7px 6px; border-top: 1px solid var(--line); }
+  table.trig th { color: var(--muted); font-weight: 600; font-size: 0.8rem; border-top: none; }
+  table.trig td.num, table.trig th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bar {
+    height: 6px;
+    background: var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .bar > div { height: 100%; background: var(--symptom); }
+  .note { color: var(--muted); font-size: 0.82rem; margin: 8px 0 0; }
+  .hidden { display: none !important; }
+  #toast {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: var(--bg);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+    max-width: 90vw;
+  }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<header>
+  <h1>IBS Diet Diary</h1>
+  <p>Data stays on this device. Export regularly to back it up.</p>
+</header>
+<main>
+  <!-- Log view -->
+  <section id="view-log">
+    <div class="daynav card" style="padding: 8px;">
+      <button id="day-prev" aria-label="Previous day">&#8592;</button>
+      <button class="label" id="day-label" style="border: none; background: transparent; font-weight: 600;"></button>
+      <input type="date" id="day-picker">
+      <button id="day-next" aria-label="Next day">&#8594;</button>
+    </div>
+
+    <div class="card" id="entry-form">
+      <h2 id="form-title">Add entry</h2>
+      <div class="seg" id="type-seg">
+        <button type="button" data-type="meal" class="active">Meal / drink</button>
+        <button type="button" data-type="symptom">Symptom</button>
+      </div>
+
+      <div id="meal-fields">
+        <label for="meal-text">What did you eat or drink?</label>
+        <input type="text" id="meal-text" placeholder="e.g. porridge with banana, black coffee" autocomplete="off">
+      </div>
+
+      <div id="symptom-fields" class="hidden">
+        <label>Symptom</label>
+        <div class="chips" id="symptom-chips"></div>
+        <input type="text" id="symptom-other" class="hidden" placeholder="Describe the symptom" autocomplete="off" style="margin-top: 6px;">
+        <label>Severity (1 = mild, 5 = severe)</label>
+        <div class="sev" id="severity-btns"></div>
+        <label for="bristol">Bristol stool type (optional)</label>
+        <select id="bristol">
+          <option value="">Not applicable</option>
+          <option value="1">1 &mdash; Separate hard lumps</option>
+          <option value="2">2 &mdash; Lumpy, sausage-shaped</option>
+          <option value="3">3 &mdash; Sausage with cracks</option>
+          <option value="4">4 &mdash; Smooth and soft</option>
+          <option value="5">5 &mdash; Soft blobs</option>
+          <option value="6">6 &mdash; Mushy, ragged edges</option>
+          <option value="7">7 &mdash; Entirely liquid</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="entry-time">Time</label>
+          <input type="time" id="entry-time">
+        </div>
+        <div>
+          <label for="entry-notes">Notes (optional)</label>
+          <input type="text" id="entry-notes" placeholder="e.g. large portion, ate quickly" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 12px;">
+        <button type="button" class="primary" id="save-entry">Add entry</button>
+        <button type="button" id="cancel-edit" class="hidden">Cancel</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="log-heading">Entries</h2>
+      <div id="log-list"></div>
+    </div>
+  </section>
+
+  <!-- History view -->
+  <section id="view-history" class="hidden">
+    <div class="card">
+      <h2>Recent days</h2>
+      <div id="history-list"></div>
+    </div>
+  </section>
+
+  <!-- Triggers view -->
+  <section id="view-triggers" class="hidden">
+    <div class="card">
+      <h2>Possible food patterns</h2>
+      <label for="trigger-window">Count symptoms within this time after eating</label>
+      <select id="trigger-window">
+        <option value="2">2 hours</option>
+        <option value="4" selected>4 hours</option>
+        <option value="6">6 hours</option>
+        <option value="8">8 hours</option>
+      </select>
+      <div id="trigger-list" style="margin-top: 12px;"></div>
+      <p class="note">
+        Foods logged at least 3 times are shown, sorted by how often a symptom
+        followed within the chosen window. These are rough patterns, not medical
+        advice &mdash; discuss them with your GP or dietitian.
+      </p>
+    </div>
+  </section>
+
+  <!-- Export view -->
+  <section id="view-export" class="hidden">
+    <div class="card">
+      <h2>Backup &amp; sharing</h2>
+      <div class="row">
+        <button type="button" id="export-json">Download JSON</button>
+        <button type="button" id="import-json">Import JSON</button>
+      </div>
+      <input type="file" id="import-file" accept=".json,application/json" class="hidden">
+      <div style="margin-top: 8px;">
+        <button type="button" id="copy-text" style="width: 100%;">Copy last 14 days as text (for your GP)</button>
+      </div>
+      <p class="note" id="export-stats"></p>
+      <p class="note">
+        Everything is stored only in this browser. Clearing browser data deletes
+        the diary, so download a JSON backup now and then. Importing merges
+        entries and never overwrites existing ones.
+      </p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-view="log" class="active">Today</button>
+  <button data-view="history">History</button>
+  <button data-view="triggers">Triggers</button>
+  <button data-view="export">Export</button>
+</nav>
+
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+
+const STORAGE_KEY = "ibs-diet-diary-v1";
+const SYMPTOMS = [
+  "Bloating", "Abdominal pain", "Cramps", "Gas", "Urgency",
+  "Diarrhoea", "Constipation", "Nausea", "Reflux", "Fatigue", "Other"
+];
+const STOP_WORDS = new Set([
+  "the", "and", "with", "a", "an", "of", "on", "in", "some", "bit",
+  "small", "large", "big", "little", "cup", "glass", "bowl", "plate",
+  "slice", "slices", "piece", "pieces", "portion", "half", "two", "few"
+]);
+const MIN_TRIGGER_COUNT = 3;
+const TEXT_EXPORT_DAYS = 14;
+
+const $ = (id) => document.getElementById(id);
+
+// ---------- storage ----------
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { version: 1, entries: [] };
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.entries)) return { version: 1, entries: [] };
+    return parsed;
+  } catch {
+    return { version: 1, entries: [] };
+  }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// ---------- dates ----------
+
+function pad(n) {
+  return String(n).padStart(2, "0");
+}
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function nowTime() {
+  const d = new Date();
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function shiftDay(dateKey, delta) {
+  const d = new Date(`${dateKey}T12:00:00`);
+  d.setDate(d.getDate() + delta);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function dayLabel(dateKey) {
+  if (dateKey === todayKey()) return "Today";
+  if (dateKey === shiftDay(todayKey(), -1)) return "Yesterday";
+  return new Date(`${dateKey}T12:00:00`).toLocaleDateString(undefined, {
+    weekday: "short", day: "numeric", month: "short", year: "numeric"
+  });
+}
+
+function entryMillis(entry) {
+  return new Date(`${entry.date}T${entry.time || "00:00"}:00`).getTime();
+}
+
+// ---------- state ----------
+
+let data = loadData();
+let currentDay = todayKey();
+let formType = "meal";
+let selectedSymptom = "";
+let selectedSeverity = 0;
+let editingId = null;
+
+// ---------- helpers ----------
+
+function toast(message) {
+  const el = $("toast");
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+function entriesForDay(dateKey) {
+  return data.entries
+    .filter((e) => e.date === dateKey)
+    .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+}
+
+function symptomLabel(entry) {
+  let label = `${entry.symptom} (severity ${entry.severity}/5)`;
+  if (entry.bristol) label += `, Bristol type ${entry.bristol}`;
+  return label;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+// ---------- form ----------
+
+function setFormType(type) {
+  formType = type;
+  for (const btn of $("type-seg").querySelectorAll("button")) {
+    btn.classList.toggle("active", btn.dataset.type === type);
+  }
+  $("meal-fields").classList.toggle("hidden", type !== "meal");
+  $("symptom-fields").classList.toggle("hidden", type !== "symptom");
+}
+
+function setSymptom(name) {
+  selectedSymptom = name;
+  for (const btn of $("symptom-chips").querySelectorAll("button")) {
+    btn.classList.toggle("active", btn.dataset.symptom === name);
+  }
+  $("symptom-other").classList.toggle("hidden", name !== "Other");
+}
+
+function setSeverity(level) {
+  selectedSeverity = level;
+  for (const btn of $("severity-btns").querySelectorAll("button")) {
+    btn.classList.toggle("active", Number(btn.dataset.level) === level);
+  }
+}
+
+function resetForm() {
+  editingId = null;
+  $("form-title").textContent = "Add entry";
+  $("save-entry").textContent = "Add entry";
+  $("cancel-edit").classList.add("hidden");
+  $("meal-text").value = "";
+  $("symptom-other").value = "";
+  $("entry-notes").value = "";
+  $("bristol").value = "";
+  $("entry-time").value = nowTime();
+  setSymptom("");
+  setSeverity(0);
+}
+
+function startEdit(id) {
+  const entry = data.entries.find((e) => e.id === id);
+  if (!entry) return;
+  editingId = id;
+  $("form-title").textContent = "Edit entry";
+  $("save-entry").textContent = "Save changes";
+  $("cancel-edit").classList.remove("hidden");
+  setFormType(entry.type);
+  $("entry-time").value = entry.time;
+  $("entry-notes").value = entry.notes || "";
+  if (entry.type === "meal") {
+    $("meal-text").value = entry.text;
+  } else {
+    const preset = SYMPTOMS.includes(entry.symptom) && entry.symptom !== "Other";
+    setSymptom(preset ? entry.symptom : "Other");
+    $("symptom-other").value = preset ? "" : entry.symptom;
+    setSeverity(entry.severity);
+    $("bristol").value = entry.bristol ? String(entry.bristol) : "";
+  }
+  $("entry-form").scrollIntoView({ behavior: "smooth" });
+}
+
+function saveEntry() {
+  const time = $("entry-time").value || nowTime();
+  const notes = $("entry-notes").value.trim();
+  let entry;
+
+  if (formType === "meal") {
+    const text = $("meal-text").value.trim();
+    if (!text) {
+      toast("Describe what you ate or drank first.");
+      return;
+    }
+    entry = { type: "meal", date: currentDay, time, text, notes };
+  } else {
+    let symptom = selectedSymptom;
+    if (symptom === "Other") symptom = $("symptom-other").value.trim();
+    if (!symptom) {
+      toast("Pick a symptom first.");
+      return;
+    }
+    if (!selectedSeverity) {
+      toast("Pick a severity from 1 to 5.");
+      return;
+    }
+    const bristol = $("bristol").value ? Number($("bristol").value) : null;
+    entry = { type: "symptom", date: currentDay, time, symptom, severity: selectedSeverity, bristol, notes };
+  }
+
+  if (editingId) {
+    const index = data.entries.findIndex((e) => e.id === editingId);
+    if (index >= 0) data.entries[index] = { ...entry, id: editingId };
+    toast("Entry updated.");
+  } else {
+    data.entries.push({ ...entry, id: crypto.randomUUID() });
+    toast(formType === "meal" ? "Meal logged." : "Symptom logged.");
+  }
+  saveData();
+  resetForm();
+  render();
+}
+
+function deleteEntry(id) {
+  const entry = data.entries.find((e) => e.id === id);
+  if (!entry) return;
+  const what = entry.type === "meal" ? entry.text : entry.symptom;
+  if (!confirm(`Delete this entry?\n\n${entry.time} — ${what}`)) return;
+  data.entries = data.entries.filter((e) => e.id !== id);
+  if (editingId === id) resetForm();
+  saveData();
+  render();
+  toast("Entry deleted.");
+}
+
+// ---------- log view ----------
+
+function renderLog() {
+  $("day-label").textContent = dayLabel(currentDay);
+  $("day-picker").value = currentDay;
+  $("log-heading").textContent = `Entries — ${dayLabel(currentDay)}`;
+
+  const entries = entriesForDay(currentDay);
+  const list = $("log-list");
+  if (!entries.length) {
+    list.innerHTML = '<div class="empty">Nothing logged for this day yet.</div>';
+    return;
+  }
+  list.innerHTML = entries.map((entry) => {
+    const tag = entry.type === "meal"
+      ? '<span class="tag meal">Meal</span>'
+      : '<span class="tag symptom">Symptom</span>';
+    const text = entry.type === "meal" ? entry.text : symptomLabel(entry);
+    const notes = entry.notes ? `<div class="notes">${escapeHtml(entry.notes)}</div>` : "";
+    return `
+      <div class="entry" data-id="${entry.id}">
+        <div class="time">${entry.time}</div>
+        <div class="body">
+          <div class="text">${tag}${escapeHtml(text)}</div>
+          ${notes}
+        </div>
+        <div class="actions">
+          <button class="small" data-action="edit" aria-label="Edit entry">Edit</button>
+          <button class="small danger" data-action="delete" aria-label="Delete entry">&times;</button>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+// ---------- history view ----------
+
+function renderHistory() {
+  const days = [...new Set(data.entries.map((e) => e.date))].sort().reverse();
+  const list = $("history-list");
+  if (!days.length) {
+    list.innerHTML = '<div class="empty">No entries yet. Start logging on the Today tab.</div>';
+    return;
+  }
+  list.innerHTML = days.map((day) => {
+    const entries = entriesForDay(day);
+    const meals = entries.filter((e) => e.type === "meal").length;
+    const symptoms = entries.filter((e) => e.type === "symptom");
+    let summary = `${meals} meal${meals === 1 ? "" : "s"}`;
+    if (symptoms.length) {
+      const worst = symptoms.reduce((a, b) => (b.severity > a.severity ? b : a));
+      summary += ` · ${symptoms.length} symptom${symptoms.length === 1 ? "" : "s"}, worst: ${escapeHtml(worst.symptom)} ${worst.severity}/5`;
+    } else {
+      summary += " · no symptoms";
+    }
+    return `
+      <button class="hist-day" data-day="${day}">
+        <div class="d">${dayLabel(day)}</div>
+        <div class="s">${summary}</div>
+      </button>`;
+  }).join("");
+}
+
+// ---------- triggers view ----------
+
+function mealTokens(text) {
+  return [...new Set(
+    text.toLowerCase()
+      .split(/[^a-z]+/)
+      .filter((word) => word.length >= 3 && !STOP_WORDS.has(word))
+  )];
+}
+
+function renderTriggers() {
+  const windowMs = Number($("trigger-window").value) * 60 * 60 * 1000;
+  const meals = data.entries.filter((e) => e.type === "meal");
+  const symptomTimes = data.entries
+    .filter((e) => e.type === "symptom")
+    .map(entryMillis)
+    .sort((a, b) => a - b);
+
+  const stats = new Map();
+  for (const meal of meals) {
+    const start = entryMillis(meal);
+    const followed = symptomTimes.some((t) => t > start && t <= start + windowMs);
+    for (const token of mealTokens(meal.text)) {
+      const stat = stats.get(token) || { eaten: 0, followed: 0 };
+      stat.eaten += 1;
+      if (followed) stat.followed += 1;
+      stats.set(token, stat);
+    }
+  }
+
+  const rows = [...stats.entries()]
+    .filter(([, stat]) => stat.eaten >= MIN_TRIGGER_COUNT)
+    .map(([food, stat]) => ({ food, ...stat, rate: stat.followed / stat.eaten }))
+    .sort((a, b) => b.rate - a.rate || b.eaten - a.eaten);
+
+  const list = $("trigger-list");
+  if (!rows.length) {
+    list.innerHTML = `<div class="empty">Not enough data yet. Once a food has been
+      logged ${MIN_TRIGGER_COUNT}+ times it will appear here.</div>`;
+    return;
+  }
+  list.innerHTML = `
+    <table class="trig">
+      <tr><th>Food</th><th class="num">Eaten</th><th class="num">Followed by symptom</th></tr>
+      ${rows.map((row) => `
+        <tr>
+          <td>${escapeHtml(row.food)}<div class="bar"><div style="width:${Math.round(row.rate * 100)}%"></div></div></td>
+          <td class="num">${row.eaten}&times;</td>
+          <td class="num">${row.followed}&times; (${Math.round(row.rate * 100)}%)</td>
+        </tr>`).join("")}
+    </table>`;
+}
+
+// ---------- export view ----------
+
+function renderExport() {
+  const meals = data.entries.filter((e) => e.type === "meal").length;
+  const symptoms = data.entries.length - meals;
+  const days = new Set(data.entries.map((e) => e.date)).size;
+  $("export-stats").textContent =
+    `Currently stored: ${meals} meals and ${symptoms} symptoms across ${days} day${days === 1 ? "" : "s"}.`;
+}
+
+function exportJson() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ibs-diet-diary-${todayKey()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast("Backup downloaded.");
+}
+
+function importJson(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!parsed || !Array.isArray(parsed.entries)) throw new Error("bad shape");
+      const existing = new Set(data.entries.map((e) => e.id));
+      let added = 0;
+      for (const entry of parsed.entries) {
+        if (!entry || !entry.id || !entry.date || !entry.type) continue;
+        if (existing.has(entry.id)) continue;
+        data.entries.push(entry);
+        existing.add(entry.id);
+        added += 1;
+      }
+      saveData();
+      render();
+      toast(`Imported ${added} new entr${added === 1 ? "y" : "ies"}.`);
+    } catch {
+      toast("That file does not look like a diary backup.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function textExport() {
+  const cutoff = shiftDay(todayKey(), -(TEXT_EXPORT_DAYS - 1));
+  const days = [...new Set(data.entries.map((e) => e.date))]
+    .filter((day) => day >= cutoff)
+    .sort();
+  if (!days.length) return "";
+  const lines = [`IBS diet diary — last ${TEXT_EXPORT_DAYS} days`];
+  for (const day of days) {
+    lines.push("", dayLabel(day) === day ? day : `${day} (${dayLabel(day)})`);
+    for (const entry of entriesForDay(day)) {
+      const what = entry.type === "meal" ? `Ate: ${entry.text}` : symptomLabel(entry);
+      const notes = entry.notes ? ` — ${entry.notes}` : "";
+      lines.push(`  ${entry.time}  ${what}${notes}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+async function copyText() {
+  const text = textExport();
+  if (!text) {
+    toast("Nothing logged in the last 14 days.");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("Copied to clipboard.");
+  } catch {
+    prompt("Copy the diary text below:", text);
+  }
+}
+
+// ---------- views ----------
+
+function showView(name) {
+  for (const section of ["log", "history", "triggers", "export"]) {
+    $(`view-${section}`).classList.toggle("hidden", section !== name);
+  }
+  for (const btn of document.querySelectorAll("nav.tabs button")) {
+    btn.classList.toggle("active", btn.dataset.view === name);
+  }
+  render();
+}
+
+function render() {
+  renderLog();
+  renderHistory();
+  renderTriggers();
+  renderExport();
+}
+
+// ---------- wiring ----------
+
+function init() {
+  $("symptom-chips").innerHTML = SYMPTOMS
+    .map((s) => `<button type="button" data-symptom="${s}">${s}</button>`)
+    .join("");
+  $("severity-btns").innerHTML = [1, 2, 3, 4, 5]
+    .map((n) => `<button type="button" data-level="${n}">${n}</button>`)
+    .join("");
+
+  $("type-seg").addEventListener("click", (event) => {
+    const btn = event.target.closest("button[data-type]");
+    if (btn) setFormType(btn.dataset.type);
+  });
+  $("symptom-chips").addEventListener("click", (event) => {
+    const btn = event.target.closest("button[data-symptom]");
+    if (btn) setSymptom(btn.dataset.symptom);
+  });
+  $("severity-btns").addEventListener("click", (event) => {
+    const btn = event.target.closest("button[data-level]");
+    if (btn) setSeverity(Number(btn.dataset.level));
+  });
+  $("save-entry").addEventListener("click", saveEntry);
+  $("cancel-edit").addEventListener("click", () => { resetForm(); render(); });
+
+  $("log-list").addEventListener("click", (event) => {
+    const btn = event.target.closest("button[data-action]");
+    if (!btn) return;
+    const id = btn.closest(".entry").dataset.id;
+    if (btn.dataset.action === "edit") startEdit(id);
+    if (btn.dataset.action === "delete") deleteEntry(id);
+  });
+
+  $("day-prev").addEventListener("click", () => { currentDay = shiftDay(currentDay, -1); resetForm(); render(); });
+  $("day-next").addEventListener("click", () => { currentDay = shiftDay(currentDay, 1); resetForm(); render(); });
+  $("day-label").addEventListener("click", () => {
+    const picker = $("day-picker");
+    if (picker.showPicker) picker.showPicker(); else picker.click();
+  });
+  $("day-picker").addEventListener("change", (event) => {
+    if (event.target.value) { currentDay = event.target.value; resetForm(); render(); }
+  });
+
+  $("history-list").addEventListener("click", (event) => {
+    const btn = event.target.closest("button[data-day]");
+    if (!btn) return;
+    currentDay = btn.dataset.day;
+    resetForm();
+    showView("log");
+  });
+
+  $("trigger-window").addEventListener("change", renderTriggers);
+  $("export-json").addEventListener("click", exportJson);
+  $("import-json").addEventListener("click", () => $("import-file").click());
+  $("import-file").addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (file) importJson(file);
+    event.target.value = "";
+  });
+  $("copy-text").addEventListener("click", copyText);
+
+  document.querySelector("nav.tabs").addEventListener("click", (event) => {
+    const btn = event.target.closest("button[data-view]");
+    if (btn) showView(btn.dataset.view);
+  });
+
+  resetForm();
+  render();
+}
+
+init();
+</script>
+</body>
+</html>

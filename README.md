@@ -193,6 +193,32 @@ Examples from the current SystmConnect page:
 - `Existing condition`
 - `Follow up`
 
+## IBS Diet Diary
+
+This repository also includes a small, separate tool: a food and symptom diary
+for IBS, in a single file at `diary/ibs-diet-diary.html`.
+
+To use it, download that one file and open it in any browser, on your phone or
+computer. No installation and no internet connection is needed after that.
+
+What it does:
+
+- Log meals and drinks with a time and optional notes.
+- Log symptoms with a severity from 1 to 5, and an optional Bristol stool type.
+- Browse and edit past days, with a summary of each day in the History tab.
+- The Triggers tab shows which foods were often followed by symptoms within a
+  few hours, so possible patterns stand out.
+- The Export tab can download a JSON backup, import one, or copy the last 14
+  days as plain text to share with your GP or dietitian.
+
+Your diary is stored only in that browser, on that device. Nothing is uploaded
+anywhere, and nothing is saved into this repository. That also means clearing
+your browser data deletes the diary, so download a JSON backup from the Export
+tab now and then.
+
+The Triggers tab shows rough patterns, not medical advice. Discuss anything it
+surfaces with your GP or dietitian.
+
 ## Safety Notes
 
 - This checker only reads the public availability page.
