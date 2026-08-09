@@ -163181,19 +163181,19 @@
     },
     "2026-08-09": {
       "date": "2026-08-09",
-      "totalChecks": 120,
+      "totalChecks": 121,
       "availableChecks": 0,
-      "unavailableChecks": 120,
+      "unavailableChecks": 121,
       "errorChecks": 0,
       "slowChecks": 0,
-      "totalDurationMs": 162633,
+      "totalDurationMs": 164281,
       "slowestMs": 2225,
       "firstCheckAt": "9 Aug 2026, 07:00",
-      "lastCheckAt": "9 Aug 2026, 21:50",
+      "lastCheckAt": "9 Aug 2026, 21:55",
       "firstAvailableAt": "",
       "lastAvailableAt": "",
       "firstUnavailableAt": "9 Aug 2026, 07:00",
-      "lastUnavailableAt": "9 Aug 2026, 21:50",
+      "lastUnavailableAt": "9 Aug 2026, 21:55",
       "lastStatus": "unavailable",
       "lastStatusChangedAt": "9 Aug 2026, 07:00",
       "lastHeading": "New condition is currently unavailable.",
@@ -163201,7 +163201,7 @@
       "lastSnippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
       "lastClassification": "closed-message-detected",
       "lastError": "",
-      "lastDurationMs": 1893,
+      "lastDurationMs": 1648,
       "lastCheckedUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
       "lastTrace": [
         {
@@ -163235,15 +163235,15 @@
       ],
       "lastRunContext": {
         "eventName": "schedule",
-        "trigger": "17 15 * * *",
-        "runMode": "monitor_loop",
-        "slot": "17 15 * * *",
+        "trigger": "25 20 * * *",
+        "runMode": "single",
+        "slot": "25 20 * * *",
         "job": "check",
-        "runId": "31322024993",
-        "runNumber": "178",
+        "runId": "31335485912",
+        "runNumber": "179",
         "runAttempt": "1",
-        "checkNumber": 60,
-        "checkTotal": 60,
+        "checkNumber": 0,
+        "checkTotal": 0,
         "checkIntervalMinutes": 5,
         "nextCheckDelayMinutes": 0,
         "nextExpectedCheckAtIso": "",
@@ -163257,11 +163257,21 @@
       "errorAlertsSent": 0,
       "lastErrorAlertAt": "",
       "lastErrorAlertAtIso": "",
-      "healthMessagesSent": 0,
-      "lastHealthMessageAt": "",
-      "lastHealthMessageAtIso": "",
+      "healthMessagesSent": 1,
+      "lastHealthMessageAt": "9 Aug 2026, 21:55",
+      "lastHealthMessageAtIso": "2026-08-09T20:55:28.095Z",
       "transitions": [],
-      "alerts": [],
+      "alerts": [
+        {
+          "type": "health",
+          "at": "9 Aug 2026, 21:55",
+          "iso": "2026-08-09T20:55:28.095Z",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "heading": "New condition is currently unavailable.",
+          "error": ""
+        }
+      ],
       "checks": [
         {
           "at": "9 Aug 2026, 07:00",
@@ -168402,28 +168412,71 @@
               "attempt": 1
             }
           ]
+        },
+        {
+          "at": "9 Aug 2026, 21:55",
+          "iso": "2026-08-09T20:55:28.095Z",
+          "time": "21:55",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1648,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ],
+              "attempt": 1
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "UID",
+                "OrgIdForError"
+              ],
+              "attempt": 1
+            }
+          ]
         }
       ]
     }
   },
-  "lastUpdatedAt": "2026-08-09T20:50:33.262Z",
+  "lastUpdatedAt": "2026-08-09T20:55:28.095Z",
   "monitoring": {
     "eventName": "schedule",
-    "trigger": "17 15 * * *",
-    "runMode": "monitor_loop",
-    "slot": "17 15 * * *",
+    "trigger": "25 20 * * *",
+    "runMode": "single",
+    "slot": "25 20 * * *",
     "job": "check",
-    "runId": "31322024993",
-    "runNumber": "178",
+    "runId": "31335485912",
+    "runNumber": "179",
     "runAttempt": "1",
-    "checkNumber": 60,
-    "checkTotal": 60,
+    "checkNumber": 0,
+    "checkTotal": 0,
     "checkIntervalMinutes": 5,
     "nextCheckDelayMinutes": 0,
     "nextExpectedCheckAtIso": "",
     "nextExpectedCheckAtLocal": "",
     "lastStatus": "unavailable",
-    "lastCheckedAt": "9 Aug 2026, 21:50",
-    "lastCheckedAtIso": "2026-08-09T20:50:33.262Z"
+    "lastCheckedAt": "9 Aug 2026, 21:55",
+    "lastCheckedAtIso": "2026-08-09T20:55:28.095Z"
   }
 }
