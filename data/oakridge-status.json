@@ -163602,19 +163602,19 @@
     },
     "2026-08-20": {
       "date": "2026-08-20",
-      "totalChecks": 180,
+      "totalChecks": 181,
       "availableChecks": 38,
-      "unavailableChecks": 141,
+      "unavailableChecks": 142,
       "errorChecks": 1,
       "slowChecks": 2,
-      "totalDurationMs": 318748,
+      "totalDurationMs": 320104,
       "slowestMs": 41521,
       "firstCheckAt": "20 Aug 2026, 06:48",
-      "lastCheckAt": "20 Aug 2026, 21:45",
+      "lastCheckAt": "20 Aug 2026, 21:50",
       "firstAvailableAt": "20 Aug 2026, 08:03",
       "lastAvailableAt": "20 Aug 2026, 11:10",
       "firstUnavailableAt": "20 Aug 2026, 06:48",
-      "lastUnavailableAt": "20 Aug 2026, 21:45",
+      "lastUnavailableAt": "20 Aug 2026, 21:50",
       "lastStatus": "unavailable",
       "lastStatusChangedAt": "20 Aug 2026, 12:41",
       "lastHeading": "New condition is currently unavailable.",
@@ -163622,7 +163622,7 @@
       "lastSnippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
       "lastClassification": "closed-message-detected",
       "lastError": "",
-      "lastDurationMs": 1456,
+      "lastDurationMs": 1356,
       "lastCheckedUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
       "lastTrace": [
         {
@@ -163634,7 +163634,6 @@
           "cookieNames": [
             "JSESSIONID",
             "onConFromNhsApp",
-            "UID",
             "OrgIdForError"
           ],
           "attempt": 1
@@ -163648,7 +163647,6 @@
           "cookieNames": [
             "JSESSIONID",
             "onConFromNhsApp",
-            "UID",
             "OrgIdForError"
           ],
           "attempt": 1
@@ -163656,15 +163654,15 @@
       ],
       "lastRunContext": {
         "eventName": "schedule",
-        "trigger": "17 15 * * *",
-        "runMode": "monitor_loop",
-        "slot": "17 15 * * *",
+        "trigger": "25 20 * * *",
+        "runMode": "single",
+        "slot": "25 20 * * *",
         "job": "check",
-        "runId": "32388361995",
-        "runNumber": "222",
+        "runId": "32416230440",
+        "runNumber": "223",
         "runAttempt": "1",
-        "checkNumber": 60,
-        "checkTotal": 60,
+        "checkNumber": 0,
+        "checkTotal": 0,
         "checkIntervalMinutes": 5,
         "nextCheckDelayMinutes": 0,
         "nextExpectedCheckAtIso": "",
@@ -163678,9 +163676,9 @@
       "errorAlertsSent": 1,
       "lastErrorAlertAt": "20 Aug 2026, 12:36",
       "lastErrorAlertAtIso": "2026-08-20T11:36:57.595Z",
-      "healthMessagesSent": 0,
-      "lastHealthMessageAt": "",
-      "lastHealthMessageAtIso": "",
+      "healthMessagesSent": 1,
+      "lastHealthMessageAt": "20 Aug 2026, 21:50",
+      "lastHealthMessageAtIso": "2026-08-20T20:50:22.282Z",
       "transitions": [
         {
           "at": "20 Aug 2026, 08:03",
@@ -164074,6 +164072,15 @@
           "classification": "network-timeout",
           "heading": "",
           "error": "Website request failed: The operation was aborted due to timeout (23)"
+        },
+        {
+          "type": "health",
+          "at": "20 Aug 2026, 21:50",
+          "iso": "2026-08-20T20:50:22.282Z",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "heading": "New condition is currently unavailable.",
+          "error": ""
         }
       ],
       "checks": [
@@ -172249,28 +172256,69 @@
               "attempt": 1
             }
           ]
+        },
+        {
+          "at": "20 Aug 2026, 21:50",
+          "iso": "2026-08-20T20:50:22.282Z",
+          "time": "21:50",
+          "status": "unavailable",
+          "classification": "closed-message-detected",
+          "durationMs": 1356,
+          "heading": "New condition is currently unavailable.",
+          "title": "Service Unavailable",
+          "snippet": "Service Unavailable Oakridge Park Medical Centre 30 Texel Close Oakridge Park Milton Keynes, MK14 6GL Back to home page New condition is currently unavailable. We are not accepting online new condition requests at this time. If you need medical help, contact your GP surgery, call",
+          "error": "",
+          "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+          "trace": [
+            {
+              "step": 1,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OrgId=K82032",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "OrgIdForError"
+              ],
+              "attempt": 1
+            },
+            {
+              "step": 2,
+              "url": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "responseUrl": "https://systmonline.tpp-uk.com/2/OnlineConsultation?OnConCategory=7",
+              "status": 200,
+              "location": "",
+              "cookieNames": [
+                "JSESSIONID",
+                "onConFromNhsApp",
+                "OrgIdForError"
+              ],
+              "attempt": 1
+            }
+          ]
         }
       ]
     }
   },
-  "lastUpdatedAt": "2026-08-20T20:45:40.297Z",
+  "lastUpdatedAt": "2026-08-20T20:50:22.282Z",
   "monitoring": {
     "eventName": "schedule",
-    "trigger": "17 15 * * *",
-    "runMode": "monitor_loop",
-    "slot": "17 15 * * *",
+    "trigger": "25 20 * * *",
+    "runMode": "single",
+    "slot": "25 20 * * *",
     "job": "check",
-    "runId": "32388361995",
-    "runNumber": "222",
+    "runId": "32416230440",
+    "runNumber": "223",
     "runAttempt": "1",
-    "checkNumber": 60,
-    "checkTotal": 60,
+    "checkNumber": 0,
+    "checkTotal": 0,
     "checkIntervalMinutes": 5,
     "nextCheckDelayMinutes": 0,
     "nextExpectedCheckAtIso": "",
     "nextExpectedCheckAtLocal": "",
     "lastStatus": "unavailable",
-    "lastCheckedAt": "20 Aug 2026, 21:45",
-    "lastCheckedAtIso": "2026-08-20T20:45:40.297Z"
+    "lastCheckedAt": "20 Aug 2026, 21:50",
+    "lastCheckedAtIso": "2026-08-20T20:50:22.282Z"
   }
 }
